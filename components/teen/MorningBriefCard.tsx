@@ -59,7 +59,7 @@ export function MorningBriefCard() {
     );
   }
 
-  if (error || !brief) {
+  if (error || !brief || !brief.sleep_summary || !brief.training_summary || !brief.nutrition_summary || !brief.checkin_summary) {
     return (
       <Card style={styles.card}>
         <View style={styles.header}>
