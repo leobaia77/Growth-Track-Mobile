@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui';
 
@@ -10,6 +11,7 @@ const TRACK_OPTIONS = [
     icon: 'heart',
     color: '#EF4444',
     bgColor: '#FEE2E2',
+    route: '/(teen-app)/log/checkin',
   },
   {
     id: 'sleep',
@@ -18,6 +20,7 @@ const TRACK_OPTIONS = [
     icon: 'moon',
     color: '#8B5CF6',
     bgColor: '#EDE9FE',
+    route: '/(teen-app)/log/checkin',
   },
   {
     id: 'workout',
@@ -26,6 +29,7 @@ const TRACK_OPTIONS = [
     icon: 'barbell',
     color: '#F59E0B',
     bgColor: '#FEF3C7',
+    route: '/(teen-app)/log/workout-log',
   },
   {
     id: 'nutrition',
@@ -34,10 +38,17 @@ const TRACK_OPTIONS = [
     icon: 'nutrition',
     color: '#10B981',
     bgColor: '#D1FAE5',
+    route: '/(teen-app)/log/meal-log',
   },
 ];
 
 export default function TrackScreen() {
+  const router = useRouter();
+
+  const handleOptionPress = (route: string) => {
+    router.push(route as never);
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -48,7 +59,11 @@ export default function TrackScreen() {
 
         <View style={styles.options}>
           {TRACK_OPTIONS.map((option) => (
-            <TouchableOpacity key={option.id} testID={`button-track-${option.id}`}>
+            <TouchableOpacity 
+              key={option.id} 
+              onPress={() => handleOptionPress(option.route)}
+              testID={`button-track-${option.id}`}
+            >
               <Card style={styles.optionCard}>
                 <View style={[styles.iconContainer, { backgroundColor: option.bgColor }]}>
                   <Ionicons name={option.icon as never} size={28} color={option.color} />
