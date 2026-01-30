@@ -27,9 +27,10 @@ export default function AgeRangeScreen() {
     
     try {
       await updateProfile.mutateAsync({ ageRange: selected } as never);
-      router.push('/(teen-onboarding)/goals');
-    } catch {
+    } catch (error) {
+      console.log('Profile update error (continuing anyway):', error);
     }
+    router.push('/(teen-onboarding)/goals');
   };
 
   return (

@@ -25,7 +25,8 @@ export default function GenerateCodeScreen() {
   const handleGenerateCode = async () => {
     try {
       await generateCode.mutateAsync();
-    } catch {
+    } catch (error) {
+      console.log('Generate code error:', error);
     }
   };
 
@@ -42,7 +43,8 @@ export default function GenerateCodeScreen() {
       await Share.share({
         message: `Join me on GrowthTrack! Use my invite code: ${inviteCode}`,
       });
-    } catch {
+    } catch (error) {
+      console.log('Share error:', error);
     }
   };
 

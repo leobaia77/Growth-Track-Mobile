@@ -51,9 +51,10 @@ export default function AvailabilityScreen() {
   const handleContinue = async () => {
     try {
       await updateProfile.mutateAsync({ weeklyAvailability: availability } as never);
-      router.push('/(teen-onboarding)/connect-health');
-    } catch {
+    } catch (error) {
+      console.log('Availability update error (continuing anyway):', error);
     }
+    router.push('/(teen-onboarding)/connect-health');
   };
 
   const handleBack = () => {

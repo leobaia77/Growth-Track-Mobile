@@ -56,9 +56,10 @@ export default function SportsScreen() {
   const handleContinue = async () => {
     try {
       await updateProfile.mutateAsync({ sports } as never);
-      router.push('/(teen-onboarding)/availability');
-    } catch {
+    } catch (error) {
+      console.log('Sports update error (continuing anyway):', error);
     }
+    router.push('/(teen-onboarding)/availability');
   };
 
   const handleBack = () => {

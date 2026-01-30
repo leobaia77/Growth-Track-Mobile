@@ -33,10 +33,10 @@ export default function GuardrailsScreen() {
         method: 'POST',
         body: { onboardingComplete: true },
       });
-      
-      router.replace('/(tabs)');
-    } catch {
+    } catch (error) {
+      console.log('Guardrails update error (continuing anyway):', error);
     }
+    router.replace('/(tabs)');
   };
 
   const handleBack = () => {

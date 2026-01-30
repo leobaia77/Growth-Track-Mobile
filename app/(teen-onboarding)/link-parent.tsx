@@ -37,9 +37,10 @@ export default function LinkParentScreen() {
   const completeOnboarding = async () => {
     try {
       await api.updateTeenProfile({ onboardingComplete: true });
-      router.replace('/(tabs)');
-    } catch {
+    } catch (error) {
+      console.log('Complete onboarding error (continuing anyway):', error);
     }
+    router.replace('/(tabs)');
   };
 
   const handleBack = () => {

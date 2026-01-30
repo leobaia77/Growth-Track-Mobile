@@ -54,9 +54,10 @@ export default function GoalsScreen() {
     
     try {
       await updateGoals.mutateAsync(selectedGoals);
-      router.push('/(teen-onboarding)/sports');
-    } catch {
+    } catch (error) {
+      console.log('Goals update error (continuing anyway):', error);
     }
+    router.push('/(teen-onboarding)/sports');
   };
 
   const handleBack = () => {
