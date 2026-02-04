@@ -2,7 +2,7 @@
 
 ## Overview
 
-GrowthTrack is a React Native Expo mobile application designed for teen health tracking. The app enables teen athletes to log health metrics (sleep, workouts, nutrition, mental health, daily check-ins), receive personalized recommendations, and includes scoliosis support with PT exercises and brace tracking. The app supports Apple HealthKit integration for automatic health data syncing on iOS devices. The teen's date of birth is used to derive age-appropriate recommendations for growth and performance.
+GrowthTrack is a React Native Expo mobile application designed for athlete health tracking. The app enables users to log health metrics (sleep, workouts, nutrition, mental health, daily check-ins), receive personalized recommendations, and includes scoliosis support with PT exercises and brace tracking. The app supports Apple HealthKit integration for automatic health data syncing on iOS devices. The user's date of birth is used to derive age-appropriate recommendations for growth and performance.
 
 ## User Preferences
 
@@ -10,7 +10,9 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-- **Removed parent profile functionality** - App is now teen-only with simplified architecture
+- **Removed parent/teen distinction** - App now uses general user terminology (user/athlete)
+- **Simplified user roles** - Only 'user' and 'admin' roles exist
+- **Renamed routes** - (teen-onboarding) → (onboarding), (teen-app) → (main)
 - **Added mental health logging** - New screen with 3 tabs: Meditation, Mood/Feelings, Journal
   - 8 meditation templates (guided breathing, body scan, mindfulness, sleep, morning focus, stress relief, gratitude, visualization)
   - 10 mood options with intensity tracking (1-10 scale)
@@ -18,7 +20,7 @@ Preferred communication style: Simple, everyday language.
 - **Enhanced workout templates** - Added A/B/C split, PPL, Upper/Lower, and Bro Split templates
   - Includes RP (Rest-Pause) and WM (Widowmaker) technique explanations
   - Added swimming and water polo templates
-- **Updated teen profile** - Now includes dateOfBirth field for age-based recommendations
+- **Updated user profile** - Now includes dateOfBirth field for age-based recommendations
 - **Added admin dashboard** - Web-optimized admin panel with 5 sections:
   - Performance & Quality Dashboard (metrics, graphs, recent activity)
   - User Management (search, reset data, suspend users)
@@ -35,16 +37,16 @@ Preferred communication style: Simple, everyday language.
 - **Styling**: StyleSheet-based component styling with consistent design tokens (colors: primary green #10B981, blue #3B82F6, purple #8B5CF6)
 
 ### Route Structure
-The app uses teen-focused navigation flows:
+The app uses user-focused navigation flows:
 - `/(auth)` - Login and registration screens
-- `/(teen-onboarding)` - 5-step teen onboarding flow (age, goals, sports, availability, health connection)
+- `/(onboarding)` - 5-step onboarding flow (age-range, goals, sports, availability, connect-health)
 - `/(tabs)` - Main app tabs for general users
-- `/(teen-app)` - Teen-specific features (home, scoliosis care, logging, insights, profile, planning)
+- `/(main)` - Main app features (home, scoliosis care, logging, insights, profile, planning)
 - `/(admin)` - Admin dashboard (web-optimized, accessible from profile for admin users)
 
 ### Component Architecture
 - **UI Components** (`components/ui/`): Reusable primitives (Button, Card, Input, Select, Slider, ProgressBar)
-- **Teen Components** (`components/teen/`): Domain-specific cards (MorningBrief, Recommendations, Readiness, Schedule, WeekFocus, EscalationAlert)
+- **User Components** (`components/teen/`): Domain-specific cards (MorningBrief, Recommendations, Readiness, Schedule, WeekFocus, EscalationAlert)
 - **Utility Components**: LoadingState, EmptyState, SkeletonLoader, OfflineIndicator
 
 ### Data Layer
@@ -61,15 +63,15 @@ The app uses teen-focused navigation flows:
 
 ### Type System
 TypeScript with strict mode enabled. Core types defined in `types/index.ts`:
-- User roles: 'teen' | 'admin'
-- Profile types: TeenProfile with goals, sports, availability, dateOfBirth
+- User roles: 'user' | 'admin'
+- Profile types: UserProfile with goals, sports, availability, dateOfBirth
 - Health data: DailyCheckin, SleepLog, WorkoutLog, NutritionLog
 - Recommendations: MorningBrief, WeekFocus, RecommendationAction, EscalationFlag
 
 ## External Dependencies
 
 ### Backend API
-- Environment variable: `EXPO_PUBLIC_API_URL` 
+- External API: https://node-post-connect.replit.app
 - RESTful API with Bearer token authentication
 - Endpoints for auth, profiles, logging, recommendations
 
