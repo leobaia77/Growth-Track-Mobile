@@ -19,6 +19,12 @@ Preferred communication style: Simple, everyday language.
   - Includes RP (Rest-Pause) and WM (Widowmaker) technique explanations
   - Added swimming and water polo templates
 - **Updated teen profile** - Now includes dateOfBirth field for age-based recommendations
+- **Added admin dashboard** - Web-optimized admin panel with 5 sections:
+  - Performance & Quality Dashboard (metrics, graphs, recent activity)
+  - User Management (search, reset data, suspend users)
+  - Error Monitoring (error logs, warnings, resolve status)
+  - AI Agents Configuration (edit prompts, models, toggle agents)
+  - Settings (maintenance mode, debug logging, danger zone)
 
 ## System Architecture
 
@@ -34,6 +40,7 @@ The app uses teen-focused navigation flows:
 - `/(teen-onboarding)` - 5-step teen onboarding flow (age, goals, sports, availability, health connection)
 - `/(tabs)` - Main app tabs for general users
 - `/(teen-app)` - Teen-specific features (home, scoliosis care, logging, insights, profile, planning)
+- `/(admin)` - Admin dashboard (web-optimized, accessible from profile for admin users)
 
 ### Component Architecture
 - **UI Components** (`components/ui/`): Reusable primitives (Button, Card, Input, Select, Slider, ProgressBar)
