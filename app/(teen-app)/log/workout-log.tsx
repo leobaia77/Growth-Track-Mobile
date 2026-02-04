@@ -47,6 +47,14 @@ const QUICK_TEMPLATES: WorkoutTemplate[] = [
   { name: 'Water Polo Scrimmage', duration: 60, type: 'practice', sport: 'water-polo', description: 'Team scrimmage with game situations' },
   { name: 'Water Polo Conditioning', duration: 45, type: 'practice', sport: 'water-polo', description: 'Eggbeater drills, sprint swims, leg work' },
   { name: 'Water Polo Game', duration: 50, type: 'game', sport: 'water-polo', description: 'Full match (4x8 min quarters)' },
+  { name: 'Upper Body', duration: 60, type: 'strength', sport: null, description: 'Bench press, rows, shoulder press, curls' },
+  { name: 'Lower Body', duration: 60, type: 'strength', sport: null, description: 'Squats, deadlifts, lunges, leg press' },
+  { name: 'Push Day', duration: 50, type: 'strength', sport: null, description: 'Chest, shoulders, triceps focus' },
+  { name: 'Pull Day', duration: 50, type: 'strength', sport: null, description: 'Back, biceps, rear delts focus' },
+  { name: 'Leg Day', duration: 55, type: 'strength', sport: null, description: 'Quads, hamstrings, glutes, calves' },
+  { name: 'Full Body Strength', duration: 45, type: 'strength', sport: null, description: 'Compound lifts: squat, bench, deadlift' },
+  { name: 'Core & Abs', duration: 30, type: 'strength', sport: null, description: 'Planks, crunches, leg raises, Russian twists' },
+  { name: 'Olympic Lifts', duration: 60, type: 'strength', sport: null, description: 'Clean & jerk, snatch, power cleans' },
 ];
 
 export default function WorkoutLogScreen() {
