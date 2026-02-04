@@ -15,6 +15,8 @@ const SETTINGS_OPTIONS = [
   { id: 'help', title: 'Help & Instructions', icon: 'help-circle-outline', route: '/(tabs)/instructions' },
 ];
 
+const ADMIN_OPTION = { id: 'admin', title: 'Admin Dashboard', icon: 'shield-checkmark', route: '/(admin)' };
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { logout } = useAuth();
@@ -50,6 +52,25 @@ export default function ProfileScreen() {
             </Text>
           </View>
         </View>
+
+        {user?.role === 'admin' ? (
+          <TouchableOpacity 
+            testID="button-admin-dashboard"
+            onPress={() => router.push('/(admin)' as never)}
+            style={styles.adminCard}
+          >
+            <Card style={styles.adminCardInner}>
+              <View style={styles.adminIcon}>
+                <Ionicons name="shield-checkmark" size={24} color="#FFFFFF" />
+              </View>
+              <View style={styles.adminInfo}>
+                <Text style={styles.adminTitle}>Admin Dashboard</Text>
+                <Text style={styles.adminDesc}>Manage app, users, and AI agents</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#8B5CF6" />
+            </Card>
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.settings}>
           {SETTINGS_OPTIONS.map((option) => (
@@ -153,5 +174,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#94A3B8',
     marginBottom: 24,
+  },
+  adminCard: {
+    marginBottom: 16,
+  },
+  adminCardInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 16,
+    backgroundColor: '#F5F3FF',
+    borderWidth: 1,
+    borderColor: '#DDD6FE',
+  },
+  adminIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  adminInfo: {
+    flex: 1,
+  },
+  adminTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#5B21B6',
+  },
+  adminDesc: {
+    fontSize: 12,
+    color: '#7C3AED',
+    marginTop: 2,
   },
 });
