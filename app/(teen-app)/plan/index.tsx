@@ -1,7 +1,8 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal, Switch, Alert } from 'react-native';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Input, Slider, Select } from '@/components/ui';
+import { useRouter } from 'expo-router';
 
 interface DayData {
   date: Date;
@@ -17,23 +18,71 @@ interface Activity {
   time: string;
   duration: number;
   type: string;
+  description?: string;
+  reminder?: boolean;
+  reminderMinutes?: number;
+  completed?: boolean;
 }
 
 const ACTIVITY_TYPES = [
   { label: 'Training', value: 'training' },
   { label: 'Game/Match', value: 'game' },
+  { label: 'Weight Lifting', value: 'weightlifting' },
+  { label: 'Swimming', value: 'swimming' },
+  { label: 'Water Polo', value: 'waterpolo' },
   { label: 'PT/Rehab', value: 'pt' },
+  { label: 'Cardio', value: 'cardio' },
   { label: 'School', value: 'school' },
   { label: 'Other', value: 'other' },
 ];
 
+const WEIGHT_LIFTING_TEMPLATES = [
+  { name: 'Upper Body', duration: 60, description: 'Bench press, rows, shoulder press, curls' },
+  { name: 'Lower Body', duration: 60, description: 'Squats, deadlifts, lunges, leg press' },
+  { name: 'Push Day', duration: 50, description: 'Chest, shoulders, triceps focus' },
+  { name: 'Pull Day', duration: 50, description: 'Back, biceps, rear delts focus' },
+  { name: 'Leg Day', duration: 55, description: 'Quads, hamstrings, glutes, calves' },
+  { name: 'Full Body', duration: 45, description: 'Compound lifts: squat, bench, deadlift' },
+  { name: 'Core & Abs', duration: 30, description: 'Planks, crunches, leg raises' },
+  { name: 'Olympic Lifts', duration: 60, description: 'Clean & jerk, snatch, power cleans' },
+];
+
+const SWIMMING_TEMPLATES = [
+  { name: 'Swim Practice', duration: 90, description: 'Warm-up, drills, main set, cool-down' },
+  { name: 'Swim Drills', duration: 60, description: 'Kick sets, pull sets, technique' },
+  { name: 'Sprint Set', duration: 45, description: '10x50m sprints with rest' },
+  { name: 'Distance', duration: 75, description: 'Endurance continuous swim' },
+];
+
+const WATER_POLO_TEMPLATES = [
+  { name: 'WP Practice', duration: 90, description: 'Treading, passing, shooting drills' },
+  { name: 'WP Scrimmage', duration: 60, description: 'Team scrimmage game situations' },
+  { name: 'WP Conditioning', duration: 45, description: 'Eggbeater drills, sprint swims' },
+];
+
+const REMINDER_OPTIONS = [
+  { label: '15 minutes before', value: 15 },
+  { label: '30 minutes before', value: 30 },
+  { label: '1 hour before', value: 60 },
+  { label: '2 hours before', value: 120 },
+];
+
 export default function PlanScreen() {
+  const router = useRouter();
   const [selectedDay, setSelectedDay] = useState(new Date());
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [activityType, setActivityType] = useState<string | null>(null);
+  const [activityName, setActivityName] = useState('');
   const [duration, setDuration] = useState(60);
   const [intensity, setIntensity] = useState(5);
   const [notes, setNotes] = useState('');
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderMinutes, setReminderMinutes] = useState(30);
+  const [activityTime, setActivityTime] = useState('4:00 PM');
+  const [plannedActivities, setPlannedActivities] = useState<Activity[]>([
+    { id: '1', name: 'Soccer Practice', time: '4:00 PM', duration: 90, type: 'training', reminder: true, reminderMinutes: 30, completed: false },
+    { id: '2', name: 'Upper Body', time: '6:00 PM', duration: 60, type: 'weightlifting', description: 'Bench press, rows, shoulder press, curls', reminder: true, reminderMinutes: 15, completed: false },
+  ]);
 
   const getWeekDays = (): DayData[] => {
     const today = new Date();
@@ -43,14 +92,14 @@ export default function PlanScreen() {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
+      const dayActivities = i === 0 ? plannedActivities : [];
+      
       days.push({
         date,
         dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
         dayNumber: date.getDate(),
         isToday: i === 0,
-        activities: i === 0 ? [
-          { id: '1', name: 'Soccer Practice', time: '4:00 PM', duration: 90, type: 'training' },
-        ] : [],
+        activities: dayActivities,
       });
     }
     
@@ -60,11 +109,84 @@ export default function PlanScreen() {
   const weekDays = getWeekDays();
 
   const handleAddActivity = () => {
+    const newActivity: Activity = {
+      id: Date.now().toString(),
+      name: activityName || getDefaultName(activityType),
+      time: activityTime,
+      duration,
+      type: activityType || 'other',
+      description: notes,
+      reminder: reminderEnabled,
+      reminderMinutes: reminderEnabled ? reminderMinutes : undefined,
+      completed: false,
+    };
+    
+    setPlannedActivities(prev => [...prev, newActivity]);
+    resetForm();
     setAddModalVisible(false);
+  };
+
+  const resetForm = () => {
     setActivityType(null);
+    setActivityName('');
     setDuration(60);
     setIntensity(5);
     setNotes('');
+    setReminderEnabled(true);
+    setReminderMinutes(30);
+    setActivityTime('4:00 PM');
+  };
+
+  const getDefaultName = (type: string | null): string => {
+    switch (type) {
+      case 'weightlifting': return 'Weight Lifting Session';
+      case 'swimming': return 'Swimming Practice';
+      case 'waterpolo': return 'Water Polo Practice';
+      case 'training': return 'Training Session';
+      case 'game': return 'Game/Match';
+      case 'pt': return 'PT/Rehab Session';
+      case 'cardio': return 'Cardio Workout';
+      default: return 'Activity';
+    }
+  };
+
+  const handleAcceptActivity = (activity: Activity) => {
+    setPlannedActivities(prev => 
+      prev.map(a => a.id === activity.id ? { ...a, completed: true } : a)
+    );
+    router.push('/(teen-app)/log/workout-log');
+  };
+
+  const handleDeleteActivity = (activityId: string) => {
+    setPlannedActivities(prev => prev.filter(a => a.id !== activityId));
+  };
+
+  const applyTemplate = (template: { name: string; duration: number; description: string }) => {
+    setActivityName(template.name);
+    setDuration(template.duration);
+    setNotes(template.description);
+  };
+
+  const getTemplatesForType = () => {
+    switch (activityType) {
+      case 'weightlifting': return WEIGHT_LIFTING_TEMPLATES;
+      case 'swimming': return SWIMMING_TEMPLATES;
+      case 'waterpolo': return WATER_POLO_TEMPLATES;
+      default: return [];
+    }
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'weightlifting': return 'barbell';
+      case 'swimming': return 'water';
+      case 'waterpolo': return 'water';
+      case 'training': return 'football';
+      case 'game': return 'trophy';
+      case 'pt': return 'fitness';
+      case 'cardio': return 'pulse';
+      default: return 'calendar';
+    }
   };
 
   return (
@@ -122,19 +244,43 @@ export default function PlanScreen() {
         </Text>
 
         {weekDays.find(d => d.date.toDateString() === selectedDay.toDateString())?.activities.map((activity) => (
-          <Card key={activity.id} style={styles.activityCard}>
+          <Card key={activity.id} style={[styles.activityCard, activity.completed && styles.activityCardCompleted]}>
             <View style={styles.activityHeader}>
-              <View style={styles.activityIcon}>
-                <Ionicons name="barbell" size={24} color="#10B981" />
+              <View style={[styles.activityIcon, activity.completed && styles.activityIconCompleted]}>
+                <Ionicons name={getActivityIcon(activity.type) as never} size={24} color={activity.completed ? '#94A3B8' : '#10B981'} />
               </View>
               <View style={styles.activityInfo}>
-                <Text style={styles.activityName}>{activity.name}</Text>
+                <Text style={[styles.activityName, activity.completed && styles.activityNameCompleted]}>{activity.name}</Text>
                 <Text style={styles.activityTime}>{activity.time} • {activity.duration} min</Text>
+                {activity.description ? (
+                  <Text style={styles.activityDescription} numberOfLines={1}>{activity.description}</Text>
+                ) : null}
+                {activity.reminder && !activity.completed ? (
+                  <View style={styles.reminderBadge}>
+                    <Ionicons name="notifications" size={12} color="#3B82F6" />
+                    <Text style={styles.reminderText}>{activity.reminderMinutes}min before</Text>
+                  </View>
+                ) : null}
               </View>
-              <TouchableOpacity>
-                <Ionicons name="ellipsis-vertical" size={20} color="#64748B" />
+              <TouchableOpacity onPress={() => handleDeleteActivity(activity.id)} testID={`button-delete-${activity.id}`}>
+                <Ionicons name="trash-outline" size={20} color="#EF4444" />
               </TouchableOpacity>
             </View>
+            {!activity.completed ? (
+              <TouchableOpacity 
+                style={styles.acceptButton}
+                onPress={() => handleAcceptActivity(activity)}
+                testID={`button-accept-${activity.id}`}
+              >
+                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
+                <Text style={styles.acceptButtonText}>Accept & Log Workout</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.completedBadge}>
+                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                <Text style={styles.completedText}>Completed</Text>
+              </View>
+            )}
           </Card>
         )) || (
           <Card style={styles.emptyCard}>
@@ -182,8 +328,65 @@ export default function PlanScreen() {
                 placeholder="Select type"
                 options={ACTIVITY_TYPES}
                 value={activityType}
-                onValueChange={setActivityType}
+                onValueChange={(val) => {
+                  setActivityType(val);
+                  setActivityName('');
+                  setNotes('');
+                }}
                 testID="select-activity-type"
+              />
+
+              {getTemplatesForType().length > 0 ? (
+                <View style={styles.templatesSection}>
+                  <Text style={styles.templatesSectionTitle}>Quick Templates</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {getTemplatesForType().map((template, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={styles.templateChip}
+                        onPress={() => applyTemplate(template)}
+                        testID={`button-plan-template-${index}`}
+                      >
+                        <Text style={styles.templateChipName}>{template.name}</Text>
+                        <Text style={styles.templateChipDuration}>{template.duration}min</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              ) : null}
+
+              <Input
+                label="Activity Name"
+                placeholder="e.g., Morning Workout"
+                value={activityName}
+                onChangeText={setActivityName}
+                testID="input-activity-name"
+              />
+
+              <Select
+                label="Time"
+                placeholder="Select time"
+                options={[
+                  { label: '6:00 AM', value: '6:00 AM' },
+                  { label: '7:00 AM', value: '7:00 AM' },
+                  { label: '8:00 AM', value: '8:00 AM' },
+                  { label: '9:00 AM', value: '9:00 AM' },
+                  { label: '10:00 AM', value: '10:00 AM' },
+                  { label: '11:00 AM', value: '11:00 AM' },
+                  { label: '12:00 PM', value: '12:00 PM' },
+                  { label: '1:00 PM', value: '1:00 PM' },
+                  { label: '2:00 PM', value: '2:00 PM' },
+                  { label: '3:00 PM', value: '3:00 PM' },
+                  { label: '4:00 PM', value: '4:00 PM' },
+                  { label: '5:00 PM', value: '5:00 PM' },
+                  { label: '6:00 PM', value: '6:00 PM' },
+                  { label: '7:00 PM', value: '7:00 PM' },
+                  { label: '8:00 PM', value: '8:00 PM' },
+                  { label: '9:00 PM', value: '9:00 PM' },
+                ]}
+                value={activityTime}
+                onValueChange={setActivityTime}
+                testID="select-activity-time"
               />
 
               <View style={styles.durationSection}>
@@ -214,13 +417,38 @@ export default function PlanScreen() {
               />
 
               <Input
-                label="Notes (optional)"
-                placeholder="Add any notes..."
+                label="Description/Notes"
+                placeholder="Drills, exercises, goals..."
                 value={notes}
                 onChangeText={setNotes}
                 multiline
                 testID="input-activity-notes"
               />
+
+              <View style={styles.reminderSection}>
+                <View style={styles.reminderRow}>
+                  <View style={styles.reminderLabelContainer}>
+                    <Ionicons name="notifications-outline" size={20} color="#374151" />
+                    <Text style={styles.reminderLabel}>Set Reminder</Text>
+                  </View>
+                  <Switch
+                    value={reminderEnabled}
+                    onValueChange={setReminderEnabled}
+                    trackColor={{ false: '#E2E8F0', true: '#86EFAC' }}
+                    thumbColor={reminderEnabled ? '#10B981' : '#94A3B8'}
+                    testID="switch-reminder"
+                  />
+                </View>
+                {reminderEnabled ? (
+                  <Select
+                    placeholder="Select reminder time"
+                    options={REMINDER_OPTIONS.map(r => ({ label: r.label, value: r.value.toString() }))}
+                    value={reminderMinutes.toString()}
+                    onValueChange={(val) => setReminderMinutes(parseInt(val || '30'))}
+                    testID="select-reminder-time"
+                  />
+                ) : null}
+              </View>
 
               <Button
                 title="Add Activity"
@@ -320,9 +548,13 @@ const styles = StyleSheet.create({
   activityCard: {
     marginBottom: 12,
   },
+  activityCardCompleted: {
+    opacity: 0.7,
+    backgroundColor: '#F1F5F9',
+  },
   activityHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 16,
   },
   activityIcon: {
@@ -333,6 +565,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  activityIconCompleted: {
+    backgroundColor: '#E2E8F0',
+  },
   activityInfo: {
     flex: 1,
   },
@@ -341,9 +576,61 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1F2937',
   },
+  activityNameCompleted: {
+    textDecorationLine: 'line-through',
+    color: '#94A3B8',
+  },
   activityTime: {
     fontSize: 14,
     color: '#64748B',
+  },
+  activityDescription: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  reminderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 6,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  reminderText: {
+    fontSize: 11,
+    color: '#3B82F6',
+    fontWeight: '500',
+  },
+  acceptButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#10B981',
+    paddingVertical: 12,
+    borderRadius: 10,
+    marginTop: 16,
+  },
+  acceptButtonText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  completedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 12,
+  },
+  completedText: {
+    fontSize: 14,
+    color: '#10B981',
+    fontWeight: '500',
   },
   emptyCard: {
     alignItems: 'center',
@@ -429,5 +716,53 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#374151',
     marginBottom: 12,
+  },
+  templatesSection: {
+    marginBottom: 16,
+  },
+  templatesSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  templateChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#E8F5F0',
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  templateChipName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  templateChipDuration: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  reminderSection: {
+    marginBottom: 20,
+    backgroundColor: '#F8FAFC',
+    padding: 16,
+    borderRadius: 12,
+  },
+  reminderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  reminderLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reminderLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#374151',
   },
 });
