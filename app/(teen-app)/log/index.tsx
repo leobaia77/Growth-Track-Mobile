@@ -23,6 +23,15 @@ const LOG_OPTIONS = [
     route: '/(teen-app)/log/workout-log',
   },
   {
+    id: 'mental',
+    title: 'Mental Health',
+    description: 'Meditation, mood, journal',
+    icon: 'leaf',
+    color: '#8B5CF6',
+    bgColor: '#EDE9FE',
+    route: '/(teen-app)/log/mental-health',
+  },
+  {
     id: 'pt',
     title: 'Log PT/Brace',
     description: 'Track PT exercises',

@@ -55,6 +55,17 @@ const QUICK_TEMPLATES: WorkoutTemplate[] = [
   { name: 'Full Body Strength', duration: 45, type: 'strength', sport: null, description: 'Compound lifts: squat, bench, deadlift' },
   { name: 'Core & Abs', duration: 30, type: 'strength', sport: null, description: 'Planks, crunches, leg raises, Russian twists' },
   { name: 'Olympic Lifts', duration: 60, type: 'strength', sport: null, description: 'Clean & jerk, snatch, power cleans' },
+  { name: 'A: Back/Biceps/Calves', duration: 50, type: 'strength', sport: null, description: 'Wide-Grip Lat Pulldown (RP 15-30 reps), One-Arm DB Row (2x12-20), Barbell Curl (RP 15-30), Calf Raise (2x12-20). RP = Rest-Pause: set to failure, rest 15-20s, repeat 2-3 mini-sets.' },
+  { name: 'B: Chest/Shoulders/Tri', duration: 50, type: 'strength', sport: null, description: 'Flat DB Press (RP 15-30), Incline DB Press (2x12-15), DB Shoulder Press (RP 15-30), Overhead Triceps Extension (RP 15-30). RP = Rest-Pause for intensity.' },
+  { name: 'C: Legs & Glutes', duration: 55, type: 'strength', sport: null, description: 'Barbell Squats (2x12-20), Leg Press Close Feet (WM 1x20), Romanian Deadlift (2x12-20), Leg Curl (WM 1x20), Hip Thrust (2x12-20). WM = Widowmaker: 20-rep set to failure.' },
+  { name: 'PPL: Push', duration: 45, type: 'strength', sport: null, description: 'Push/Pull/Legs split - Push day. Bench Press, Incline Press, Shoulder Press, Lateral Raises, Tricep Pushdowns. Focus on progressive overload.' },
+  { name: 'PPL: Pull', duration: 45, type: 'strength', sport: null, description: 'Push/Pull/Legs split - Pull day. Deadlift, Barbell Rows, Lat Pulldown, Face Pulls, Bicep Curls. Prioritize form over weight.' },
+  { name: 'PPL: Legs', duration: 50, type: 'strength', sport: null, description: 'Push/Pull/Legs split - Leg day. Squats, Leg Press, Romanian Deadlift, Leg Extensions, Leg Curls, Calf Raises. Full leg development.' },
+  { name: 'Upper/Lower: Upper', duration: 50, type: 'strength', sport: null, description: 'Upper/Lower split - Upper day. Bench Press, Rows, Shoulder Press, Pull-ups, Bicep/Tricep work. 2-3 sets per exercise.' },
+  { name: 'Upper/Lower: Lower', duration: 50, type: 'strength', sport: null, description: 'Upper/Lower split - Lower day. Squats, Romanian Deadlift, Leg Press, Lunges, Calf Raises. Focus on compound movements.' },
+  { name: 'Bro Split: Chest', duration: 40, type: 'strength', sport: null, description: 'Chest focus day. Flat Bench Press, Incline DB Press, Cable Flyes, Dips. 3-4 sets each, 8-12 reps. Warm up properly.' },
+  { name: 'Bro Split: Back', duration: 45, type: 'strength', sport: null, description: 'Back focus day. Deadlifts, Lat Pulldown, Barbell Rows, Seated Cable Rows, Face Pulls. Pull with your back, not arms.' },
+  { name: 'Bro Split: Arms', duration: 35, type: 'strength', sport: null, description: 'Arms focus day. Barbell Curls, Hammer Curls, Tricep Pushdowns, Skull Crushers, Close-Grip Bench. Superset for pump.' },
 ];
 
 export default function WorkoutLogScreen() {

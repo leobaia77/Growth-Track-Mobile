@@ -45,6 +45,14 @@ const WEIGHT_LIFTING_TEMPLATES = [
   { name: 'Full Body', duration: 45, description: 'Compound lifts: squat, bench, deadlift' },
   { name: 'Core & Abs', duration: 30, description: 'Planks, crunches, leg raises' },
   { name: 'Olympic Lifts', duration: 60, description: 'Clean & jerk, snatch, power cleans' },
+  { name: 'A: Back/Biceps/Calves', duration: 50, description: 'Lat Pulldown (RP), DB Row, Barbell Curl (RP), Calf Raise. RP = Rest-Pause.' },
+  { name: 'B: Chest/Shoulders/Tri', duration: 50, description: 'DB Press (RP), Incline Press, Shoulder Press (RP), Triceps Ext (RP).' },
+  { name: 'C: Legs & Glutes', duration: 55, description: 'Squats, Leg Press (WM), RDL, Leg Curl (WM), Hip Thrust. WM = Widowmaker.' },
+  { name: 'PPL: Push', duration: 45, description: 'Bench, Incline, Shoulder Press, Lateral Raises, Triceps. Progressive overload.' },
+  { name: 'PPL: Pull', duration: 45, description: 'Deadlift, Rows, Lat Pulldown, Face Pulls, Bicep Curls. Form over weight.' },
+  { name: 'PPL: Legs', duration: 50, description: 'Squats, Leg Press, RDL, Extensions, Curls, Calves. Full development.' },
+  { name: 'Upper/Lower: Upper', duration: 50, description: 'Bench, Rows, Shoulder Press, Pull-ups, Arm work. 2-3 sets each.' },
+  { name: 'Upper/Lower: Lower', duration: 50, description: 'Squats, RDL, Leg Press, Lunges, Calves. Compound focus.' },
 ];
 
 const SWIMMING_TEMPLATES = [
