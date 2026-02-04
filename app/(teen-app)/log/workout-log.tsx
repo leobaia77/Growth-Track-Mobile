@@ -19,17 +19,34 @@ const SPORTS = [
   { label: 'Football', value: 'football' },
   { label: 'Baseball', value: 'baseball' },
   { label: 'Swimming', value: 'swimming' },
+  { label: 'Water Polo', value: 'water-polo' },
   { label: 'Track & Field', value: 'track' },
   { label: 'Tennis', value: 'tennis' },
   { label: 'Volleyball', value: 'volleyball' },
   { label: 'Other', value: 'other' },
 ];
 
-const QUICK_TEMPLATES = [
-  { name: 'Soccer Practice', duration: 90, type: 'practice', sport: 'soccer' },
-  { name: 'Gym Session', duration: 45, type: 'strength', sport: null },
-  { name: 'Morning Run', duration: 30, type: 'cardio', sport: null },
-  { name: 'Game Day', duration: 60, type: 'game', sport: 'soccer' },
+interface WorkoutTemplate {
+  name: string;
+  duration: number;
+  type: string;
+  sport: string | null;
+  description?: string;
+}
+
+const QUICK_TEMPLATES: WorkoutTemplate[] = [
+  { name: 'Soccer Practice', duration: 90, type: 'practice', sport: 'soccer', description: 'Warm-up, passing drills, scrimmage' },
+  { name: 'Gym Session', duration: 45, type: 'strength', sport: null, description: 'Full body strength training' },
+  { name: 'Morning Run', duration: 30, type: 'cardio', sport: null, description: 'Easy pace cardio' },
+  { name: 'Game Day', duration: 60, type: 'game', sport: 'soccer', description: 'Full match competition' },
+  { name: 'Swim Practice', duration: 90, type: 'practice', sport: 'swimming', description: 'Warm-up 400m, drills, main set, cool-down' },
+  { name: 'Swim Drills', duration: 60, type: 'practice', sport: 'swimming', description: 'Kick sets, pull sets, stroke technique' },
+  { name: 'Swim Sprint Set', duration: 45, type: 'practice', sport: 'swimming', description: '10x50m sprints with 30s rest' },
+  { name: 'Swim Distance', duration: 75, type: 'practice', sport: 'swimming', description: 'Endurance: 2000m continuous swim' },
+  { name: 'Water Polo Practice', duration: 90, type: 'practice', sport: 'water-polo', description: 'Treading, passing, shooting drills' },
+  { name: 'Water Polo Scrimmage', duration: 60, type: 'practice', sport: 'water-polo', description: 'Team scrimmage with game situations' },
+  { name: 'Water Polo Conditioning', duration: 45, type: 'practice', sport: 'water-polo', description: 'Eggbeater drills, sprint swims, leg work' },
+  { name: 'Water Polo Game', duration: 50, type: 'game', sport: 'water-polo', description: 'Full match (4x8 min quarters)' },
 ];
 
 export default function WorkoutLogScreen() {
@@ -44,10 +61,11 @@ export default function WorkoutLogScreen() {
     router.back();
   };
 
-  const applyTemplate = (template: typeof QUICK_TEMPLATES[0]) => {
+  const applyTemplate = (template: WorkoutTemplate) => {
     setWorkoutType(template.type);
     setDuration(template.duration);
     if (template.sport) setSport(template.sport);
+    if (template.description) setNotes(template.description);
   };
 
   const showSportSelector = workoutType === 'practice' || workoutType === 'game';
@@ -88,6 +106,9 @@ export default function WorkoutLogScreen() {
             >
               <Text style={styles.templateName}>{template.name}</Text>
               <Text style={styles.templateDuration}>{template.duration}min</Text>
+              {template.description ? (
+                <Text style={styles.templateDescription} numberOfLines={1}>{template.description}</Text>
+              ) : null}
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -221,6 +242,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
+  },
+  templateDescription: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 4,
+    maxWidth: 140,
   },
   durationSection: {
     marginBottom: 24,
