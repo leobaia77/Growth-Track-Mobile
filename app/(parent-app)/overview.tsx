@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, RefreshControl } from 'react-native';
 import { useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { TeenStatusCard, WeeklySummaryCard, AtRiskIndicators, GuardrailsStatusCard } from '@/components/parent';
 
 export default function OverviewScreen() {

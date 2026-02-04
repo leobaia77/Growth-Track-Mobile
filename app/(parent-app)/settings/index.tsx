@@ -1,9 +1,11 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator, Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@/components/ui';
+import { Card, Button } from '@/components/ui';
 import { storage } from '@/services/storage';
+import { useParentProfile, useGenerateInviteCode } from '@/hooks/useApi';
+import * as Clipboard from 'expo-clipboard';
 import type { User } from '@/types';
 
 const SETTINGS_SECTIONS = [
@@ -31,6 +33,11 @@ const SETTINGS_SECTIONS = [
 export default function SettingsScreen() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [copied, setCopied] = useState(false);
+  const { data: profile, isLoading: profileLoading } = useParentProfile();
+  const generateCode = useGenerateInviteCode();
+
+  const inviteCode = (profile as { inviteCode?: string })?.inviteCode || null;
 
   useEffect(() => {
     loadUser();
@@ -39,6 +46,32 @@ export default function SettingsScreen() {
   const loadUser = async () => {
     const userData = await storage.getUser<User>();
     setUser(userData);
+  };
+
+  const handleGenerateCode = async () => {
+    try {
+      await generateCode.mutateAsync();
+    } catch (error) {
+      console.log('Generate code error:', error);
+    }
+  };
+
+  const handleCopyCode = async () => {
+    if (!inviteCode) return;
+    await Clipboard.setStringAsync(inviteCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleShareCode = async () => {
+    if (!inviteCode) return;
+    try {
+      await Share.share({
+        message: `Join me on GrowthTrack! Use my invite code: ${inviteCode}`,
+      });
+    } catch (error) {
+      console.log('Share error:', error);
+    }
   };
 
   return (
@@ -66,6 +99,59 @@ export default function SettingsScreen() {
             <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
           </Card>
         </TouchableOpacity>
+
+        <Card style={styles.inviteCodeCard}>
+          <View style={styles.inviteHeader}>
+            <Ionicons name="key" size={20} color="#10B981" />
+            <Text style={styles.inviteTitle}>Invite Code</Text>
+          </View>
+          {profileLoading ? (
+            <ActivityIndicator size="small" color="#10B981" style={styles.inviteLoading} />
+          ) : inviteCode ? (
+            <View style={styles.inviteCodeContent}>
+              <View style={styles.codeDisplay}>
+                <Text style={styles.codeText}>{inviteCode}</Text>
+              </View>
+              <View style={styles.codeActions}>
+                <TouchableOpacity 
+                  style={styles.codeAction}
+                  onPress={handleCopyCode}
+                  testID="button-copy-code"
+                >
+                  <Ionicons 
+                    name={copied ? 'checkmark' : 'copy-outline'} 
+                    size={20} 
+                    color="#10B981" 
+                  />
+                  <Text style={styles.codeActionText}>
+                    {copied ? 'Copied!' : 'Copy'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={styles.codeAction}
+                  onPress={handleShareCode}
+                  testID="button-share-code"
+                >
+                  <Ionicons name="share-outline" size={20} color="#10B981" />
+                  <Text style={styles.codeActionText}>Share</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.generateCodeSection}>
+              <Text style={styles.generateCodeText}>
+                Generate a code to invite your teen
+              </Text>
+              <Button
+                title={generateCode.isPending ? "Generating..." : "Generate Code"}
+                onPress={handleGenerateCode}
+                loading={generateCode.isPending}
+                testID="button-generate-code"
+                style={styles.generateButton}
+              />
+            </View>
+          )}
+        </Card>
 
         <Card style={styles.linkedTeenCard}>
           <View style={styles.linkedHeader}>
@@ -278,5 +364,64 @@ const styles = StyleSheet.create({
   version: {
     fontSize: 12,
     color: '#94A3B8',
+  },
+  inviteCodeCard: {
+    marginBottom: 16,
+    backgroundColor: '#E8F5F0',
+  },
+  inviteHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  inviteTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#10B981',
+  },
+  inviteLoading: {
+    marginVertical: 16,
+  },
+  inviteCodeContent: {
+    alignItems: 'center',
+  },
+  codeDisplay: {
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  codeText: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#10B981',
+    letterSpacing: 3,
+  },
+  codeActions: {
+    flexDirection: 'row',
+    gap: 24,
+  },
+  codeAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  codeActionText: {
+    fontSize: 14,
+    color: '#10B981',
+  },
+  generateCodeSection: {
+    alignItems: 'center',
+  },
+  generateCodeText: {
+    fontSize: 14,
+    color: '#64748B',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  generateButton: {
+    minWidth: 160,
   },
 });
