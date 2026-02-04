@@ -5,9 +5,8 @@ modules = ["nodejs-22"]
 channel = "stable-24_05"
 
 [deployment]
-deploymentTarget = "static"
-build = ["sh", "-c", "npm run expo:static:build && npm run server:build"]
-run = ["npm", "run", "server:prod"]
+deploymentTarget = "cloudrun"
+run = ["sh", "-c", "node server/index.js"]
 publicDir = "dist"
 
 [[ports]]
