@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/services/api';
-import type { TeenProfile, ParentProfile, DailyCheckin, SleepLog, WorkoutLog, NutritionLog, Recommendations, MorningBrief } from '@/types';
+import type { TeenProfile, DailyCheckin, SleepLog, WorkoutLog, NutritionLog, Recommendations, MorningBrief, MentalHealthLog } from '@/types';
 
 export function useTeenProfile() {
   return useQuery<TeenProfile>({
@@ -31,43 +31,21 @@ export function useUpdateTeenGoals() {
   });
 }
 
-export function useParentProfile() {
-  return useQuery<ParentProfile>({
-    queryKey: ['parentProfile'],
-    queryFn: () => api.getParentProfile() as Promise<ParentProfile>,
-  });
-}
-
-export function useGenerateInviteCode() {
+export function useLogMentalHealth() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: () => api.generateInviteCode(),
+    mutationFn: (data: Partial<MentalHealthLog>) => api.logMentalHealth(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['parentProfile'] });
+      queryClient.invalidateQueries({ queryKey: ['mentalHealthLogs'] });
     },
   });
 }
 
-export function useAcceptInviteCode() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (code: string) => api.acceptInviteCode(code),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teenProfile'] });
-    },
-  });
-}
-
-export function useUpdateGuardrails() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: (data: unknown) => api.updateGuardrails(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['guardrails'] });
-    },
+export function useMentalHealthLogs(startDate?: string, endDate?: string) {
+  return useQuery<MentalHealthLog[]>({
+    queryKey: ['mentalHealthLogs', startDate, endDate],
+    queryFn: () => api.getMentalHealthLogs(startDate, endDate) as Promise<MentalHealthLog[]>,
   });
 }
 

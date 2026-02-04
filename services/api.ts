@@ -109,20 +109,16 @@ class ApiService {
     return this.request('/api/teen/goals', { method: 'POST', body: { goals } });
   }
 
-  async getParentProfile() {
-    return this.request('/api/parent/profile');
+  async logMentalHealth(data: unknown) {
+    return this.request('/api/mental-health', { method: 'POST', body: data });
   }
 
-  async generateInviteCode() {
-    return this.request('/api/parent/invite-code', { method: 'POST' });
-  }
-
-  async acceptInviteCode(code: string) {
-    return this.request('/api/teen/link-parent', { method: 'POST', body: { inviteCode: code } });
-  }
-
-  async updateGuardrails(data: unknown) {
-    return this.request('/api/parent/guardrails', { method: 'POST', body: data });
+  async getMentalHealthLogs(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/mental-health${query}`);
   }
 
   async createCheckin(data: unknown) {

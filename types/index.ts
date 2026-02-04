@@ -1,4 +1,4 @@
-export type UserRole = 'teen' | 'parent' | 'admin';
+export type UserRole = 'teen' | 'admin';
 
 export interface User {
   id: number;
@@ -16,12 +16,12 @@ export interface AuthResponse {
 export interface TeenProfile {
   id: number;
   userId: number;
+  dateOfBirth: string | null;
   ageRange: string | null;
   goals: Goal[];
   sports: Sport[];
   weeklyAvailability: WeeklyAvailability | null;
   healthConnected: boolean;
-  linkedParentId: number | null;
 }
 
 export interface Goal {
@@ -52,27 +52,15 @@ export interface TimeBlock {
   activity?: string;
 }
 
-export interface ParentProfile {
+export interface MentalHealthLog {
   id: number;
-  userId: number;
-  inviteCode: string | null;
-}
-
-export interface ParentTeenLink {
-  id: number;
-  parentId: number;
   teenId: number;
-  status: 'pending' | 'active' | 'revoked';
-  supervisionLevel: 'light' | 'moderate' | 'full';
-}
-
-export interface ParentGuardrails {
-  id: number;
-  parentId: number;
-  teenId: number;
-  maxWeeklyTrainingMinutes: number | null;
-  minNightlySleepHours: number | null;
-  noWeightLossMode: boolean;
+  date: string;
+  type: 'meditation' | 'mood' | 'journal';
+  subType?: string;
+  durationMinutes?: number;
+  moodLevel?: number;
+  notes?: string;
 }
 
 export interface DailyCheckin {
