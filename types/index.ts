@@ -1,4 +1,4 @@
-export type UserRole = 'teen' | 'admin';
+export type UserRole = 'user' | 'admin';
 
 export interface User {
   id: number;
@@ -13,7 +13,7 @@ export interface AuthResponse {
   user: User;
 }
 
-export interface TeenProfile {
+export interface UserProfile {
   id: number;
   userId: number;
   dateOfBirth: string | null;
@@ -23,6 +23,8 @@ export interface TeenProfile {
   weeklyAvailability: WeeklyAvailability | null;
   healthConnected: boolean;
 }
+
+export type TeenProfile = UserProfile;
 
 export interface Goal {
   id: string;
@@ -54,7 +56,7 @@ export interface TimeBlock {
 
 export interface MentalHealthLog {
   id: number;
-  teenId: number;
+  userId: number;
   date: string;
   type: 'meditation' | 'mood' | 'journal';
   subType?: string;
@@ -65,7 +67,7 @@ export interface MentalHealthLog {
 
 export interface DailyCheckin {
   id: number;
-  teenId: number;
+  userId: number;
   date: string;
   energyLevel: number;
   sorenessLevel: number;
@@ -77,7 +79,7 @@ export interface DailyCheckin {
 
 export interface SleepLog {
   id: number;
-  teenId: number;
+  userId: number;
   date: string;
   totalHours: string;
   source: string;
@@ -85,7 +87,7 @@ export interface SleepLog {
 
 export interface WorkoutLog {
   id: number;
-  teenId: number;
+  userId: number;
   date: string;
   workoutType: string;
   durationMinutes: number;
@@ -96,7 +98,7 @@ export interface WorkoutLog {
 
 export interface NutritionLog {
   id: number;
-  teenId: number;
+  userId: number;
   date: string;
   mealType: string;
   description: string | null;
@@ -146,7 +148,7 @@ export interface SleepGuidance {
 }
 
 export interface EscalationFlag {
-  type: 'consult_professional' | 'parent_notification' | 'urgent_concern';
+  type: 'consult_professional' | 'coach_notification' | 'urgent_concern';
   reason: string;
   urgency: 'immediate' | 'soon' | 'routine';
 }
@@ -163,7 +165,7 @@ export interface Recommendations {
 }
 
 export interface MorningBrief {
-  teenProfileId: string;
+  profileId: string;
   date: string;
   sleep_summary: {
     avg_hours: number;
