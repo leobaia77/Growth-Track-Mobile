@@ -11,7 +11,7 @@ const TRACK_OPTIONS = [
     icon: 'heart',
     color: '#EF4444',
     bgColor: '#FEE2E2',
-    route: '/(teen-app)/log/checkin',
+    route: '/(main)/log/checkin',
   },
   {
     id: 'sleep',
@@ -20,7 +20,7 @@ const TRACK_OPTIONS = [
     icon: 'moon',
     color: '#8B5CF6',
     bgColor: '#EDE9FE',
-    route: '/(teen-app)/log/checkin',
+    route: '/(main)/log/checkin',
   },
   {
     id: 'workout',
@@ -29,7 +29,7 @@ const TRACK_OPTIONS = [
     icon: 'barbell',
     color: '#F59E0B',
     bgColor: '#FEF3C7',
-    route: '/(teen-app)/log/workout-log',
+    route: '/(main)/log/workout-log',
   },
   {
     id: 'nutrition',
@@ -38,7 +38,7 @@ const TRACK_OPTIONS = [
     icon: 'nutrition',
     color: '#10B981',
     bgColor: '#D1FAE5',
-    route: '/(teen-app)/log/meal-log',
+    route: '/(main)/log/meal-log',
   },
 ];
 

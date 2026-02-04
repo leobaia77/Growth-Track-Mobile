@@ -52,13 +52,12 @@ export function useAuth() {
   const register = async (
     email: string, 
     password: string, 
-    displayName: string, 
-    role: 'teen' | 'parent'
+    displayName: string
   ): Promise<void> => {
     try {
       setError(null);
       setIsLoading(true);
-      const response: AuthResponse = await api.register(email, password, displayName, role);
+      const response: AuthResponse = await api.register(email, password, displayName);
       setUser(response.user);
       redirectAfterAuth(response.user);
     } catch (err) {
@@ -81,11 +80,7 @@ export function useAuth() {
 
   const redirectAfterAuth = (authUser: User) => {
     if (!authUser.onboardingComplete) {
-      if (authUser.role === 'teen') {
-        router.replace('/(teen-onboarding)/age-range');
-      } else if (authUser.role === 'parent') {
-        router.replace('/(parent-onboarding)/generate-code');
-      }
+      router.replace('/(onboarding)/age-range');
     } else {
       router.replace('/(tabs)');
     }

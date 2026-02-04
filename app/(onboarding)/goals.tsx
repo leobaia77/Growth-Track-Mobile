@@ -57,7 +57,7 @@ export default function GoalsScreen() {
     } catch (error) {
       console.log('Goals update error (continuing anyway):', error);
     }
-    router.push('/(teen-onboarding)/sports');
+    router.push('/(onboarding)/sports');
   };
 
   const handleBack = () => {

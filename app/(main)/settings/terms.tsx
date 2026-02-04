@@ -35,7 +35,7 @@ export default function TermsOfServiceScreen() {
         <View style={styles.highlightBox}>
           <Ionicons name="information-circle" size={24} color="#3B82F6" />
           <Text style={styles.highlightText}>
-            You must be at least 13 years old to use GrowthTrack. If you are under 18, you should review these terms with a parent or guardian.
+            You must be at least 13 years old to use GrowthTrack.
           </Text>
         </View>
 
@@ -43,8 +43,6 @@ export default function TermsOfServiceScreen() {
           <Text style={styles.sectionTitle}>Age Requirements</Text>
           <View style={styles.bulletList}>
             <Text style={styles.bulletItem}>• You must be at least 13 years of age to create an account</Text>
-            <Text style={styles.bulletItem}>• Users under 18 may require parent/guardian consent in some jurisdictions</Text>
-            <Text style={styles.bulletItem}>• Parents/guardians can link their account to monitor their teen's health data</Text>
             <Text style={styles.bulletItem}>• We reserve the right to terminate accounts that violate age requirements</Text>
           </View>
         </View>
@@ -65,7 +63,7 @@ export default function TermsOfServiceScreen() {
             GrowthTrack is designed to:
           </Text>
           <View style={styles.bulletList}>
-            <Text style={styles.bulletItem}>• Provide evidence-based health education for teens</Text>
+            <Text style={styles.bulletItem}>• Provide evidence-based health education for athletes</Text>
             <Text style={styles.bulletItem}>• Help track sleep, nutrition, workouts, and wellness</Text>
             <Text style={styles.bulletItem}>• Offer personalized guidance based on your goals</Text>
             <Text style={styles.bulletItem}>• Support healthy habits and athletic performance</Text>
@@ -76,16 +74,15 @@ export default function TermsOfServiceScreen() {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Parent/Guardian Responsibility</Text>
+          <Text style={styles.sectionTitle}>User Responsibility</Text>
           <Text style={styles.paragraph}>
-            If you are a parent or guardian using GrowthTrack to monitor a teen:
+            When using GrowthTrack:
           </Text>
           <View style={styles.bulletList}>
             <Text style={styles.bulletItem}>• You are responsible for ensuring appropriate use of the app</Text>
-            <Text style={styles.bulletItem}>• You must respect the privacy settings your teen has configured</Text>
             <Text style={styles.bulletItem}>• Alerts and recommendations are for informational purposes only</Text>
             <Text style={styles.bulletItem}>• You should discuss health concerns with appropriate professionals</Text>
-            <Text style={styles.bulletItem}>• The app does not replace parental judgment or professional guidance</Text>
+            <Text style={styles.bulletItem}>• The app does not replace professional medical guidance</Text>
           </View>
         </View>
 

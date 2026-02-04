@@ -54,7 +54,7 @@ export default function AvailabilityScreen() {
     } catch (error) {
       console.log('Availability update error (continuing anyway):', error);
     }
-    router.push('/(teen-onboarding)/connect-health');
+    router.push('/(onboarding)/connect-health');
   };
 
   const handleBack = () => {

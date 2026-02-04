@@ -162,7 +162,7 @@ export default function PlanScreen() {
     setPlannedActivities(prev => 
       prev.map(a => a.id === activity.id ? { ...a, completed: true } : a)
     );
-    router.push('/(teen-app)/log/workout-log');
+    router.push('/(main)/log/workout-log');
   };
 
   const handleDeleteActivity = (activityId: string) => {

@@ -29,7 +29,7 @@ export default function ConnectHealthScreen() {
 
   const handleConnect = async () => {
     if (Platform.OS !== 'ios') {
-      router.push('/(teen-onboarding)/link-parent');
+      router.replace('/(tabs)');
       return;
     }
 
@@ -44,12 +44,12 @@ export default function ConnectHealthScreen() {
     setIsConnecting(false);
     
     if (success) {
-      router.push('/(teen-onboarding)/link-parent');
+      router.replace('/(tabs)');
     }
   };
 
   const handleSkip = () => {
-    router.push('/(teen-onboarding)/link-parent');
+    router.replace('/(tabs)');
   };
 
   const handleBack = () => {
@@ -115,7 +115,7 @@ export default function ConnectHealthScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
-        <ProgressBar current={5} total={6} />
+        <ProgressBar current={5} total={5} />
 
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#64748B" />

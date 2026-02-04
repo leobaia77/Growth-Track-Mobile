@@ -30,7 +30,7 @@ export default function AgeRangeScreen() {
     } catch (error) {
       console.log('Profile update error (continuing anyway):', error);
     }
-    router.push('/(teen-onboarding)/goals');
+    router.push('/(onboarding)/goals');
   };
 
   return (

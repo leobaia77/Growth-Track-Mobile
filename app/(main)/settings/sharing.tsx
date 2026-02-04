@@ -52,12 +52,12 @@ export default function SharingScreen() {
           <View style={styles.infoText}>
             <Text style={styles.infoTitle}>You're in control</Text>
             <Text style={styles.infoDescription}>
-              Choose what health data your linked parent can see. Safety alerts are always shared to keep you safe.
+              Control your data privacy settings. Choose what health data is included in exports and reports.
             </Text>
           </View>
         </Card>
 
-        <Text style={styles.sectionTitle}>Sharing with Parent</Text>
+        <Text style={styles.sectionTitle}>Data Export Settings</Text>
         <Card style={styles.optionsCard}>
           {options.map((option, index) => (
             <View 
@@ -86,7 +86,7 @@ export default function SharingScreen() {
         <Card style={styles.noteCard}>
           <Ionicons name="information-circle" size={20} color="#3B82F6" />
           <Text style={styles.noteText}>
-            Safety alerts cannot be disabled as they help your parent support you when needed.
+            Safety alerts are always included in exports to provide complete health context.
           </Text>
         </Card>
       </ScrollView>

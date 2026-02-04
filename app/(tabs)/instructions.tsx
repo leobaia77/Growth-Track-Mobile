@@ -21,7 +21,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
       'Complete your profile setup during onboarding',
       'Set your health goals (growth, muscle, bone health, etc.)',
       'Select your sports and activities',
-      'Connect with a parent for additional support (optional)',
+      'Connect Apple Health for automatic data syncing',
     ],
   },
   {
@@ -41,7 +41,7 @@ const GUIDE_SECTIONS: GuideSection[] = [
     id: 'scoliosis-care',
     title: 'Scoliosis Support',
     icon: 'body-outline',
-    description: 'Special features for teens managing scoliosis.',
+    description: 'Special features for athletes managing scoliosis.',
     steps: [
       'Track your daily brace wear time',
       'Complete assigned PT exercises',
@@ -59,18 +59,6 @@ const GUIDE_SECTIONS: GuideSection[] = [
       'View your weekly averages and compare to goals',
       'Get personalized recommendations based on your data',
       'Track your readiness score each morning',
-    ],
-  },
-  {
-    id: 'parent-connection',
-    title: 'Parent Connection',
-    icon: 'people-outline',
-    description: 'How parents can stay connected with their teen\'s health.',
-    steps: [
-      'Parents generate an invite code in their Settings',
-      'Teens enter the code to link accounts',
-      'Parents can view health summaries and trends',
-      'Privacy controls let teens manage what parents see',
     ],
   },
 ];
@@ -111,8 +99,8 @@ export default function InstructionsScreen() {
           <Ionicons name="heart" size={32} color="#10B981" />
           <Text style={styles.welcomeTitle}>Your Health Journey Starts Here</Text>
           <Text style={styles.welcomeText}>
-            GrowthTrack helps teen athletes track their health, stay on top of their goals, 
-            and keep parents informed. Explore the sections below to learn how to use each feature.
+            GrowthTrack helps athletes track their health, stay on top of their goals, 
+            and achieve peak performance. Explore the sections below to learn how to use each feature.
           </Text>
         </Card>
 

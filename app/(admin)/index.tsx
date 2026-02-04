@@ -19,7 +19,7 @@ interface UserData {
   id: string;
   email: string;
   name: string;
-  role: 'teen' | 'admin';
+  role: 'user' | 'admin';
   status: 'active' | 'inactive' | 'suspended';
   lastActive: string;
   logsCount: number;
@@ -54,11 +54,11 @@ const MOCK_METRICS: MetricCard[] = [
 ];
 
 const MOCK_USERS: UserData[] = [
-  { id: '1', email: 'alex@example.com', name: 'Alex Johnson', role: 'teen', status: 'active', lastActive: '2 min ago', logsCount: 45 },
-  { id: '2', email: 'sam@example.com', name: 'Sam Williams', role: 'teen', status: 'active', lastActive: '15 min ago', logsCount: 32 },
-  { id: '3', email: 'jordan@example.com', name: 'Jordan Lee', role: 'teen', status: 'inactive', lastActive: '3 days ago', logsCount: 12 },
+  { id: '1', email: 'alex@example.com', name: 'Alex Johnson', role: 'user', status: 'active', lastActive: '2 min ago', logsCount: 45 },
+  { id: '2', email: 'sam@example.com', name: 'Sam Williams', role: 'user', status: 'active', lastActive: '15 min ago', logsCount: 32 },
+  { id: '3', email: 'jordan@example.com', name: 'Jordan Lee', role: 'user', status: 'inactive', lastActive: '3 days ago', logsCount: 12 },
   { id: '4', email: 'admin@growthtrack.app', name: 'Admin User', role: 'admin', status: 'active', lastActive: 'Now', logsCount: 0 },
-  { id: '5', email: 'taylor@example.com', name: 'Taylor Brown', role: 'teen', status: 'suspended', lastActive: '1 week ago', logsCount: 8 },
+  { id: '5', email: 'taylor@example.com', name: 'Taylor Brown', role: 'user', status: 'suspended', lastActive: '1 week ago', logsCount: 8 },
 ];
 
 const MOCK_ERRORS: ErrorLog[] = [
@@ -74,7 +74,7 @@ const MOCK_AGENTS: AgentConfig[] = [
     id: '1',
     name: 'Recommendations Agent',
     model: 'gpt-4o-mini',
-    systemPrompt: 'You are a health recommendation assistant for teen athletes. Provide age-appropriate advice based on their logged health data including sleep, workouts, nutrition, and mental health. Always prioritize safety and encourage healthy habits.',
+    systemPrompt: 'You are a health recommendation assistant for athletes. Provide age-appropriate advice based on their logged health data including sleep, workouts, nutrition, and mental health. Always prioritize safety and encourage healthy habits.',
     temperature: 0.7,
     maxTokens: 500,
     isActive: true,
@@ -83,7 +83,7 @@ const MOCK_AGENTS: AgentConfig[] = [
     id: '2',
     name: 'Morning Brief Agent',
     model: 'gpt-4o-mini',
-    systemPrompt: 'Generate a personalized morning brief for the teen athlete. Include sleep quality analysis, readiness score, and top 3 recommendations for the day. Keep it motivating and actionable.',
+    systemPrompt: 'Generate a personalized morning brief for the athlete. Include sleep quality analysis, readiness score, and top 3 recommendations for the day. Keep it motivating and actionable.',
     temperature: 0.8,
     maxTokens: 300,
     isActive: true,
@@ -92,7 +92,7 @@ const MOCK_AGENTS: AgentConfig[] = [
     id: '3',
     name: 'Scoliosis PT Agent',
     model: 'gpt-4o',
-    systemPrompt: 'You are a physical therapy assistant specializing in scoliosis management for teens. Provide exercise recommendations based on their brace wear time and PT session logs. Always recommend consulting with their healthcare provider for any concerns.',
+    systemPrompt: 'You are a physical therapy assistant specializing in scoliosis management. Provide exercise recommendations based on their brace wear time and PT session logs. Always recommend consulting with their healthcare provider for any concerns.',
     temperature: 0.5,
     maxTokens: 400,
     isActive: false,

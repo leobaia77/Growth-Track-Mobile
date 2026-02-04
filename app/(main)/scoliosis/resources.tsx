@@ -69,7 +69,7 @@ const FAQ_ITEMS = [
   },
   {
     question: 'Can I play sports with scoliosis?',
-    answer: 'Most teens with scoliosis can participate in sports and physical activities. Swimming, yoga, and core-strengthening exercises are often recommended. Talk to your doctor about any specific restrictions.',
+    answer: 'Most athletes with scoliosis can participate in sports and physical activities. Swimming, yoga, and core-strengthening exercises are often recommended. Talk to your doctor about any specific restrictions.',
   },
   {
     question: 'Will my curve get worse?',

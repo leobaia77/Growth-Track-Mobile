@@ -26,7 +26,7 @@ export default function Index() {
       const user = response.user;
 
       if (!user.onboardingComplete) {
-        router.replace('/(teen-onboarding)/age-range');
+        router.replace('/(onboarding)/age-range');
       } else {
         router.replace('/(tabs)');
       }

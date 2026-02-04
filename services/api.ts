@@ -76,10 +76,10 @@ class ApiService {
     return response;
   }
 
-  async register(email: string, password: string, displayName: string, role: string): Promise<AuthResponse> {
+  async register(email: string, password: string, displayName: string): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: { email, password, displayName, role },
+      body: { email, password, displayName, role: 'user' },
       requiresAuth: false,
     });
     
@@ -97,16 +97,28 @@ class ApiService {
     return this.request('/api/auth/me');
   }
 
+  async getProfile() {
+    return this.request('/api/profile');
+  }
+
+  async updateProfile(data: unknown) {
+    return this.request('/api/profile', { method: 'PATCH', body: data });
+  }
+
+  async updateGoals(goals: unknown) {
+    return this.request('/api/goals', { method: 'POST', body: { goals } });
+  }
+
   async getTeenProfile() {
-    return this.request('/api/teen/profile');
+    return this.getProfile();
   }
 
   async updateTeenProfile(data: unknown) {
-    return this.request('/api/teen/profile', { method: 'PATCH', body: data });
+    return this.updateProfile(data);
   }
 
   async updateTeenGoals(goals: unknown) {
-    return this.request('/api/teen/goals', { method: 'POST', body: { goals } });
+    return this.updateGoals(goals);
   }
 
   async logMentalHealth(data: unknown) {

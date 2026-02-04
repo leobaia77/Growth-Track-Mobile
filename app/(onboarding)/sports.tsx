@@ -59,7 +59,7 @@ export default function SportsScreen() {
     } catch (error) {
       console.log('Sports update error (continuing anyway):', error);
     }
-    router.push('/(teen-onboarding)/availability');
+    router.push('/(onboarding)/availability');
   };
 
   const handleBack = () => {

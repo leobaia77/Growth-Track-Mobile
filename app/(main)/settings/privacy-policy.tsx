@@ -47,7 +47,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletItem}>• Health and fitness data you log (sleep, workouts, nutrition, daily check-ins)</Text>
             <Text style={styles.bulletItem}>• Health data synced from Apple HealthKit (with your permission)</Text>
             <Text style={styles.bulletItem}>• Goals and preferences you set</Text>
-            <Text style={styles.bulletItem}>• Parent-teen relationship data (if applicable)</Text>
+            <Text style={styles.bulletItem}>• Your preferences and app settings</Text>
             <Text style={styles.bulletItem}>• Scoliosis care data (PT exercises, brace wear time, symptoms)</Text>
           </View>
         </View>
@@ -60,7 +60,7 @@ export default function PrivacyPolicyScreen() {
           <View style={styles.bulletList}>
             <Text style={styles.bulletItem}>• Providing personalized health insights and recommendations</Text>
             <Text style={styles.bulletItem}>• Tracking your progress toward your health goals</Text>
-            <Text style={styles.bulletItem}>• Enabling parent oversight features (with your consent)</Text>
+            <Text style={styles.bulletItem}>• Enabling data export and backup features</Text>
             <Text style={styles.bulletItem}>• Generating safety alerts for concerning health patterns</Text>
             <Text style={styles.bulletItem}>• Improving the app experience based on usage patterns</Text>
           </View>
@@ -105,7 +105,7 @@ export default function PrivacyPolicyScreen() {
             We only share your data in these limited circumstances:
           </Text>
           <View style={styles.bulletList}>
-            <Text style={styles.bulletItem}>• With your linked parent/guardian (based on your sharing preferences)</Text>
+            <Text style={styles.bulletItem}>• With your explicit consent when exporting data</Text>
             <Text style={styles.bulletItem}>• When required by law or legal process</Text>
             <Text style={styles.bulletItem}>• To protect the safety of users or the public</Text>
           </View>
@@ -120,7 +120,7 @@ export default function PrivacyPolicyScreen() {
             <Text style={styles.bulletItem}>• Access all your personal data</Text>
             <Text style={styles.bulletItem}>• Export your data in a portable format</Text>
             <Text style={styles.bulletItem}>• Delete your account and all associated data</Text>
-            <Text style={styles.bulletItem}>• Control what data is shared with parents/guardians</Text>
+            <Text style={styles.bulletItem}>• Control your privacy settings at any time</Text>
             <Text style={styles.bulletItem}>• Disconnect HealthKit at any time</Text>
           </View>
         </View>
@@ -135,7 +135,7 @@ export default function PrivacyPolicyScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Children's Privacy</Text>
           <Text style={styles.paragraph}>
-            GrowthTrack is designed for teens aged 13 and older. We do not knowingly collect information from children under 13. If you believe a child under 13 has provided us with personal information, please contact us immediately.
+            GrowthTrack is designed for users aged 13 and older. We do not knowingly collect information from children under 13. If you believe a child under 13 has provided us with personal information, please contact us immediately.
           </Text>
         </View>
 
