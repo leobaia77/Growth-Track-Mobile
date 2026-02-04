@@ -26,11 +26,13 @@ export default function MealLogScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} testID="button-back-meal">
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Log Meal</Text>
-        <View style={styles.placeholder} />
+        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.homeButton} testID="button-home-meal">
+          <Ionicons name="home-outline" size={24} color="#64748B" />
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -139,13 +141,13 @@ const styles = StyleSheet.create({
   backButton: {
     padding: 8,
   },
+  homeButton: {
+    padding: 8,
+  },
   title: {
     fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
-  },
-  placeholder: {
-    width: 40,
   },
   content: {
     flex: 1,
