@@ -8,11 +8,11 @@ import { storage } from '@/services/storage';
 import type { User } from '@/types';
 
 const SETTINGS_OPTIONS = [
-  { id: 'account', title: 'Account Settings', icon: 'person-outline' },
-  { id: 'privacy', title: 'Privacy & Sharing', icon: 'lock-closed-outline' },
-  { id: 'notifications', title: 'Notifications', icon: 'notifications-outline' },
-  { id: 'health', title: 'Health Connections', icon: 'heart-outline' },
-  { id: 'help', title: 'Help & Support', icon: 'help-circle-outline' },
+  { id: 'account', title: 'Account Settings', icon: 'person-outline', route: null },
+  { id: 'privacy', title: 'Privacy & Sharing', icon: 'lock-closed-outline', route: null },
+  { id: 'notifications', title: 'Notifications', icon: 'notifications-outline', route: null },
+  { id: 'health', title: 'Health Connections', icon: 'heart-outline', route: null },
+  { id: 'help', title: 'Help & Instructions', icon: 'help-circle-outline', route: '/(tabs)/instructions' },
 ];
 
 export default function ProfileScreen() {
@@ -53,7 +53,11 @@ export default function ProfileScreen() {
 
         <View style={styles.settings}>
           {SETTINGS_OPTIONS.map((option) => (
-            <TouchableOpacity key={option.id} testID={`button-settings-${option.id}`}>
+            <TouchableOpacity 
+              key={option.id} 
+              testID={`button-settings-${option.id}`}
+              onPress={() => option.route ? router.push(option.route as never) : null}
+            >
               <Card style={styles.settingCard}>
                 <Ionicons name={option.icon as never} size={24} color="#64748B" />
                 <Text style={styles.settingTitle}>{option.title}</Text>

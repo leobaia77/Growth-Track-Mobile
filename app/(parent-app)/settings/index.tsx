@@ -28,6 +28,12 @@ const SETTINGS_SECTIONS = [
       { id: 'account', title: 'Account Settings', icon: 'person', route: '/(parent-app)/settings/account' },
     ],
   },
+  {
+    title: 'Help',
+    items: [
+      { id: 'instructions', title: 'How to Use GrowthTrack', icon: 'book', route: '/(tabs)/instructions' },
+    ],
+  },
 ];
 
 export default function SettingsScreen() {
