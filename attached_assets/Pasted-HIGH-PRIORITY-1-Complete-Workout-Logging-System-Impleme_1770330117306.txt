@@ -1,0 +1,85 @@
+HIGH PRIORITY
+1. Complete Workout Logging System
+
+Implement full workout logging with template selection (PPL, A/B/C Split, Upper/Lower, etc.)
+Add ability to log individual exercises with sets, reps, and weight
+Include RPE (Rate of Perceived Exertion) rating
+Support special notations (RP = Rest-Pause, WM = Widowmaker)
+Add time tracking for workout duration
+
+2. Add Success Notifications & Confirmations
+
+Toast notifications for successful form submissions
+Error handling for failed submissions
+Confirmation dialogs before destructive actions
+Show data save status to users
+
+3. Enhanced Data Visualization
+
+Add more chart types (progress curves, heatmaps for consistency)
+Weekly vs monthly view toggles
+Goal-specific dashboards
+Personal records (PR) tracking
+Comparison: current week vs previous week
+
+4. Real Sleep Logging
+
+Full sleep tracking with bedtime/wake time selection
+Sleep quality ratings
+Sleep notes/disturbances (dreams, interrupted, etc.)
+Sleep trend analysis
+Integration with Apple HealthKit data
+
+MEDIUM PRIORITY
+5. Push Notifications System
+
+Daily check-in reminders (morning/evening)
+Workout reminder notifications
+Meal logging reminders
+Brace wear time alerts
+Weekly summary notifications
+Customizable notification preferences
+
+6. Social & Accountability Features
+
+Share workouts with friends
+Training partner matching
+Leaderboards (friends/team)
+Goals sharing
+Progress photo gallery (before/after)
+Comments/encouragement from connections
+
+7. Advanced Analytics
+
+Predictive recommendations (e.g., "Your recovery suggests you should rest today")
+AI-powered form tips based on workout patterns
+Injury risk detection
+Personal best tracking
+Body composition tracking (if weight data available)
+VO2 max estimation
+
+8. Scoliosis-Specific Enhancements
+
+PT exercise video library with demonstrations
+Brace wear schedule suggestions based on goals
+Symptom severity correlation with activity
+Doctor integration (share reports with physician)
+Curvature progress tracking
+Exercise effectiveness rating
+
+9. Data Management & Export
+
+CSV/JSON export functionality
+Data backup options
+Ability to delete individual logs
+Bulk data operations
+HIPAA-compliant data sharing with healthcare providers
+
+10. Goal Tracking & Progress
+
+Goal achievement milestones
+Progress toward goals on home screen
+Goal-specific recommendations
+Ability to pause/archive goals
+Goal reset/refresh options
+Achievement badges/gamification
