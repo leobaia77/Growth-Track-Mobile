@@ -97,6 +97,12 @@ export default function LoginScreen() {
               testID="button-login"
             />
 
+            <Link href="/(auth)/forgot-password" asChild>
+              <TouchableOpacity style={styles.forgotPassword} testID="link-forgot-password">
+                <Text style={styles.forgotPasswordText}>Forgot password?</Text>
+              </TouchableOpacity>
+            </Link>
+
             <View style={styles.divider}>
               <View style={styles.dividerLine} />
               <Text style={styles.dividerText}>or</Text>
@@ -186,6 +192,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: 38,
+  },
+  forgotPassword: {
+    alignSelf: 'center',
+    marginTop: 16,
+  },
+  forgotPasswordText: {
+    color: '#10B981',
+    fontSize: 14,
+    fontWeight: '500',
   },
   divider: {
     flexDirection: 'row',

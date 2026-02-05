@@ -21,6 +21,9 @@ Preferred communication style: Simple, everyday language.
   - Includes RP (Rest-Pause) and WM (Widowmaker) technique explanations
   - Added swimming and water polo templates
 - **Updated user profile** - Now includes dateOfBirth field for age-based recommendations
+- **Added security word recovery** - Registration now includes a security word field for account recovery
+  - Forgot password link on login page
+  - Password reset using email + security word verification
 - **Added admin dashboard** - Web-optimized admin panel with 5 sections:
   - Performance & Quality Dashboard (metrics, graphs, recent activity)
   - User Management (search, reset data, suspend users)

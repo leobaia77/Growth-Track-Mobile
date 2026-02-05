@@ -52,12 +52,13 @@ export function useAuth() {
   const register = async (
     email: string, 
     password: string, 
-    displayName: string
+    displayName: string,
+    securityWord?: string
   ): Promise<void> => {
     try {
       setError(null);
       setIsLoading(true);
-      const response: AuthResponse = await api.register(email, password, displayName);
+      const response: AuthResponse = await api.register(email, password, displayName, securityWord);
       setUser(response.user);
       redirectAfterAuth(response.user);
     } catch (err) {

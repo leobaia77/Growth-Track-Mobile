@@ -18,20 +18,21 @@ export default function RegisterScreen() {
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [securityWord, setSecurityWord] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { register, isLoading, error } = useAuth();
 
   const handleRegister = async () => {
-    if (!displayName.trim() || !email.trim() || !password) {
+    if (!displayName.trim() || !email.trim() || !password || !securityWord.trim()) {
       return;
     }
     try {
-      await register(email.trim(), password, displayName.trim());
+      await register(email.trim(), password, displayName.trim(), securityWord.trim());
     } catch {
     }
   };
 
-  const isValid = displayName.trim() && email.trim() && password;
+  const isValid = displayName.trim() && email.trim() && password && securityWord.trim();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -100,6 +101,18 @@ export default function RegisterScreen() {
                 />
               </TouchableOpacity>
             </View>
+
+            <Input
+              label="Security Word"
+              placeholder="A secret word for account recovery"
+              value={securityWord}
+              onChangeText={setSecurityWord}
+              autoCapitalize="none"
+              testID="input-register-security-word"
+            />
+            <Text style={styles.securityHint}>
+              Remember this word - you'll need it to recover your account if you forget your password.
+            </Text>
 
             <Button
               title="Create Account"
@@ -185,6 +198,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: 38,
+  },
+  securityHint: {
+    fontSize: 13,
+    color: '#64748B',
+    marginBottom: 16,
+    marginTop: -8,
+    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',

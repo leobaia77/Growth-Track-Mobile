@@ -76,10 +76,10 @@ class ApiService {
     return response;
   }
 
-  async register(email: string, password: string, displayName: string): Promise<AuthResponse> {
+  async register(email: string, password: string, displayName: string, securityWord?: string): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: { email, password, displayName, role: 'user' },
+      body: { email, password, displayName, role: 'user', securityWord },
       requiresAuth: false,
     });
     
@@ -87,6 +87,22 @@ class ApiService {
     await storage.setUser(response.user);
     
     return response;
+  }
+
+  async verifySecurityWord(email: string, securityWord: string): Promise<{ valid: boolean }> {
+    return this.request<{ valid: boolean }>('/api/auth/verify-security-word', {
+      method: 'POST',
+      body: { email, securityWord },
+      requiresAuth: false,
+    });
+  }
+
+  async resetPassword(email: string, securityWord: string, newPassword: string): Promise<{ success: boolean }> {
+    return this.request<{ success: boolean }>('/api/auth/reset-password', {
+      method: 'POST',
+      body: { email, securityWord, newPassword },
+      requiresAuth: false,
+    });
   }
 
   async logout(): Promise<void> {
