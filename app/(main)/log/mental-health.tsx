@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Tex
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, Slider } from '@/components/ui';
+import { useLogMentalHealth } from '@/hooks/useApi';
+import { useToast } from '@/components/ui/Toast';
 
 type LogType = 'meditation' | 'mood' | 'journal';
 
@@ -84,6 +86,8 @@ const JOURNAL_TEMPLATES: JournalTemplate[] = [
 
 export default function MentalHealthLogScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const logMentalHealth = useLogMentalHealth();
   const [logType, setLogType] = useState<LogType>('meditation');
   const [selectedMeditation, setSelectedMeditation] = useState<MeditationTemplate | null>(null);
   const [meditationDuration, setMeditationDuration] = useState(10);
@@ -95,7 +99,34 @@ export default function MentalHealthLogScreen() {
   const [journalEntry, setJournalEntry] = useState('');
 
   const handleSave = () => {
-    router.back();
+    const data: Record<string, unknown> = {
+      date: new Date().toISOString().split('T')[0],
+      type: logType,
+    };
+
+    if (logType === 'meditation') {
+      data.subType = selectedMeditation?.name || 'General';
+      data.durationMinutes = meditationDuration;
+      data.notes = meditationNotes;
+    } else if (logType === 'mood') {
+      data.subType = selectedMood?.name || 'General';
+      data.moodLevel = moodIntensity;
+      data.notes = moodNotes;
+    } else if (logType === 'journal') {
+      data.subType = selectedJournal?.name || 'Free Write';
+      data.notes = journalEntry;
+    }
+
+    logMentalHealth.mutate(data, {
+      onSuccess: () => {
+        const labels = { meditation: 'Meditation', mood: 'Mood', journal: 'Journal' };
+        showToast('success', `${labels[logType]} Saved`, 'Your mental health entry has been recorded');
+        setTimeout(() => router.back(), 600);
+      },
+      onError: (error) => {
+        showToast('error', 'Save Failed', error.message || 'Could not save entry');
+      },
+    });
   };
 
   const applyMeditationTemplate = (template: MeditationTemplate) => {
@@ -304,7 +335,8 @@ export default function MentalHealthLogScreen() {
         <Button
           title="Save Entry"
           onPress={handleSave}
-          disabled={!canSave()}
+          loading={logMentalHealth.isPending}
+          disabled={!canSave() || logMentalHealth.isPending}
           testID="button-save-mental-health"
         />
       </View>

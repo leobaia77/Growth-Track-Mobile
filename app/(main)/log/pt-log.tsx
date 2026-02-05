@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Mod
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Input } from '@/components/ui';
+import { useLogPtAdherence } from '@/hooks/useApi';
+import { useToast } from '@/components/ui/Toast';
 
 interface Exercise {
   id: string;
@@ -21,6 +23,8 @@ const MOCK_ROUTINE: Exercise[] = [
 
 export default function PTLogScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const logPtAdherence = useLogPtAdherence();
   const [exercises, setExercises] = useState<Exercise[]>(MOCK_ROUTINE);
   const [braceMinutes, setBraceMinutes] = useState('');
   const [notes, setNotes] = useState('');
@@ -92,7 +96,26 @@ export default function PTLogScreen() {
   const progress = Math.round((completedCount / exercises.length) * 100);
 
   const handleSave = () => {
-    router.back();
+    const completedExercises = exercises.filter(e => e.completed);
+    logPtAdherence.mutate(
+      {
+        date: new Date().toISOString().split('T')[0],
+        exercisesCompleted: completedExercises.length,
+        exercisesTotal: exercises.length,
+        braceMinutes: braceMinutes ? parseInt(braceMinutes, 10) : 0,
+        notes,
+        exercises: exercises.map(e => ({ name: e.name, completed: e.completed })),
+      },
+      {
+        onSuccess: () => {
+          showToast('success', 'Routine Saved', `${completedExercises.length} of ${exercises.length} exercises completed`);
+          setTimeout(() => router.back(), 600);
+        },
+        onError: (error) => {
+          showToast('error', 'Save Failed', error instanceof Error ? error.message : 'Could not save routine');
+        },
+      }
+    );
   };
 
   const formatTime = (seconds: number) => {
@@ -200,6 +223,8 @@ export default function PTLogScreen() {
         <Button
           title="Complete Routine"
           onPress={handleSave}
+          loading={logPtAdherence.isPending}
+          disabled={logPtAdherence.isPending}
           testID="button-complete-routine"
         />
       </View>

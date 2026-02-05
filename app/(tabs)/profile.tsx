@@ -8,10 +8,10 @@ import { storage } from '@/services/storage';
 import type { User } from '@/types';
 
 const SETTINGS_OPTIONS = [
-  { id: 'account', title: 'Account Settings', icon: 'person-outline', route: null },
-  { id: 'privacy', title: 'Privacy & Sharing', icon: 'lock-closed-outline', route: null },
-  { id: 'notifications', title: 'Notifications', icon: 'notifications-outline', route: null },
-  { id: 'health', title: 'Health Connections', icon: 'heart-outline', route: null },
+  { id: 'account', title: 'Account Settings', icon: 'person-outline', route: '/(main)/settings/account' },
+  { id: 'privacy', title: 'Privacy & Sharing', icon: 'lock-closed-outline', route: '/(main)/settings/sharing' },
+  { id: 'notifications', title: 'Notifications', icon: 'notifications-outline', route: '/(main)/settings/notifications' },
+  { id: 'health', title: 'Health Connections', icon: 'heart-outline', route: '/(main)/settings/connections' },
   { id: 'help', title: 'Help & Instructions', icon: 'help-circle-outline', route: '/(tabs)/instructions' },
 ];
 
