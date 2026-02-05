@@ -1,7 +1,7 @@
 import { storage } from './storage';
 import type { AuthResponse, ApiError } from '@/types';
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://node-post-connect.replit.app';
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
