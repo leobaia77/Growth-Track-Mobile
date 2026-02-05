@@ -79,7 +79,7 @@ class ApiService {
   async register(email: string, password: string, displayName: string, securityWord?: string): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: { email, password, displayName, role: 'teen', securityWord },
+      body: { email, password, displayName, role: 'user' },
       requiresAuth: false,
     });
     
@@ -118,11 +118,19 @@ class ApiService {
   }
 
   async updateProfile(data: unknown) {
-    return this.request('/api/profile', { method: 'PATCH', body: data });
+    return this.request('/api/profile', { method: 'PUT', body: data });
+  }
+
+  async getUserProfile() {
+    return this.request('/api/user-profile');
+  }
+
+  async updateUserProfile(data: unknown) {
+    return this.request('/api/user-profile', { method: 'PUT', body: data });
   }
 
   async updateGoals(goals: unknown) {
-    return this.request('/api/goals', { method: 'POST', body: { goals } });
+    return this.request('/api/goals', { method: 'PUT', body: { goals } });
   }
 
   async getTeenProfile() {
@@ -191,36 +199,36 @@ class ApiService {
   }
 
   async getBraceSchedule() {
-    return this.request('/api/scoliosis/brace-schedule');
+    return this.request('/api/brace-schedules');
   }
 
   async createBraceSchedule(data: unknown) {
-    return this.request('/api/scoliosis/brace-schedule', { method: 'POST', body: data });
+    return this.request('/api/brace-schedules', { method: 'POST', body: data });
   }
 
   async updateBraceSchedule(id: string, data: unknown) {
-    return this.request(`/api/scoliosis/brace-schedule/${id}`, { method: 'PATCH', body: data });
+    return this.request(`/api/brace-schedules/${id}`, { method: 'PUT', body: data });
   }
 
   async getBraceLogs(date?: string) {
     const query = date ? `?date=${date}` : '';
-    return this.request(`/api/scoliosis/brace-logs${query}`);
+    return this.request(`/api/brace-logs${query}`);
   }
 
   async getActiveBraceSession() {
-    return this.request('/api/scoliosis/brace-logs/active');
+    return this.request('/api/brace-logs/active');
   }
 
   async startBraceSession(notes?: string) {
-    return this.request('/api/scoliosis/brace-logs/start', { method: 'POST', body: { notes } });
+    return this.request('/api/brace-logs/start', { method: 'POST', body: { notes } });
   }
 
   async endBraceSession(id: string, notes?: string) {
-    return this.request(`/api/scoliosis/brace-logs/${id}/end`, { method: 'POST', body: { notes } });
+    return this.request(`/api/brace-logs/${id}/end`, { method: 'POST', body: { notes } });
   }
 
   async createBraceLog(data: unknown) {
-    return this.request('/api/scoliosis/brace-logs', { method: 'POST', body: data });
+    return this.request('/api/brace-logs', { method: 'POST', body: data });
   }
 
   async getPtExercises() {
@@ -228,19 +236,30 @@ class ApiService {
   }
 
   async getPtRoutines() {
-    return this.request('/api/scoliosis/routines');
+    return this.request('/api/pt-routines');
   }
 
-  async getPtAdherence(startDate?: string, endDate?: string) {
+  async createPtRoutine(data: unknown) {
+    return this.request('/api/pt-routines', { method: 'POST', body: data });
+  }
+
+  async updatePtRoutine(id: string, data: unknown) {
+    return this.request(`/api/pt-routines/${id}`, { method: 'PUT', body: data });
+  }
+
+  async getPtAdherence(routineId?: string, startDate?: string, endDate?: string) {
+    if (routineId) {
+      return this.request(`/api/pt-adherence/${routineId}`);
+    }
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/scoliosis/pt-adherence${query}`);
+    return this.request(`/api/pt-adherence${query}`);
   }
 
   async logPtAdherence(data: unknown) {
-    return this.request('/api/scoliosis/pt-adherence', { method: 'POST', body: data });
+    return this.request('/api/pt-adherence', { method: 'POST', body: data });
   }
 
   async getSymptomLogs(startDate?: string, endDate?: string) {
@@ -248,11 +267,11 @@ class ApiService {
     if (startDate) params.append('startDate', startDate);
     if (endDate) params.append('endDate', endDate);
     const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/scoliosis/symptoms${query}`);
+    return this.request(`/api/scoliosis-symptoms${query}`);
   }
 
   async logSymptoms(data: unknown) {
-    return this.request('/api/scoliosis/symptoms', { method: 'POST', body: data });
+    return this.request('/api/scoliosis-symptoms', { method: 'POST', body: data });
   }
 }
 
