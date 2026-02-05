@@ -24,6 +24,7 @@ Preferred communication style: Simple, everyday language.
 - **Added security word recovery** - Registration now includes a security word field for account recovery
   - Forgot password link on login page
   - Password reset using email + security word verification
+- **Testing documentation** - Comprehensive app testing guide with screenshots added (TESTING_GUIDE.md)
 - **Added admin dashboard** - Web-optimized admin panel with 5 sections:
   - Performance & Quality Dashboard (metrics, graphs, recent activity)
   - User Management (search, reset data, suspend users)
