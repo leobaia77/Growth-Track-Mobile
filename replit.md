@@ -35,6 +35,11 @@ Preferred communication style: Simple, everyday language.
   - Error Monitoring (error logs, warnings, resolve status)
   - AI Agents Configuration (edit prompts, models, toggle agents)
   - Settings (maintenance mode, debug logging, danger zone)
+- **Bug fixes (Feb 2026)**:
+  - Fixed Sleep route in Track tab - was pointing to check-in screen instead of sleep-log
+  - Connected mental health logging to API via useLogMentalHealth hook with toast feedback
+  - Connected PT log to API via useLogPtAdherence hook with toast feedback
+  - Fixed profile settings routes - Account, Privacy, Notifications, Health Connections now navigate to their respective settings screens
 
 ## System Architecture
 
