@@ -79,7 +79,7 @@ class ApiService {
   async register(email: string, password: string, displayName: string, securityWord?: string): Promise<AuthResponse> {
     const response = await this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: { email, password, displayName, role: 'user', securityWord },
+      body: { email, password, displayName, role: 'teen', securityWord },
       requiresAuth: false,
     });
     
