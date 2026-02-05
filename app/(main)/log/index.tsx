@@ -23,6 +23,15 @@ const LOG_OPTIONS = [
     route: '/(main)/log/workout-log',
   },
   {
+    id: 'sleep',
+    title: 'Log Sleep',
+    description: 'Track your rest',
+    icon: 'moon',
+    color: '#6366F1',
+    bgColor: '#EEF2FF',
+    route: '/(main)/log/sleep-log',
+  },
+  {
     id: 'mental',
     title: 'Mental Health',
     description: 'Meditation, mood, journal',

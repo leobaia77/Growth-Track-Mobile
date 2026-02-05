@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } fr
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Input, Select } from '@/components/ui';
+import { useLogNutrition } from '@/hooks/useApi';
+import { useToast } from '@/components/ui/Toast';
 
 const MEAL_TYPES = [
   { label: 'Breakfast', value: 'breakfast' },
@@ -11,8 +13,17 @@ const MEAL_TYPES = [
   { label: 'Snack', value: 'snack' },
 ];
 
+const QUICK_MEALS: { name: string; calories: number; protein: number }[] = [
+  { name: 'Protein Shake', calories: 200, protein: 30 },
+  { name: 'Banana', calories: 105, protein: 1 },
+  { name: 'Chicken & Rice', calories: 500, protein: 40 },
+  { name: 'Salad', calories: 250, protein: 10 },
+];
+
 export default function MealLogScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const logNutrition = useLogNutrition();
   const [mealType, setMealType] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [calories, setCalories] = useState('');
@@ -20,7 +31,32 @@ export default function MealLogScreen() {
   const [showMacros, setShowMacros] = useState(false);
 
   const handleSave = () => {
-    router.back();
+    logNutrition.mutate(
+      {
+        date: new Date().toISOString().split('T')[0],
+        mealType: mealType || 'snack',
+        description,
+        calories: calories ? parseInt(calories, 10) : null,
+        protein: protein ? parseInt(protein, 10) : null,
+        source: 'manual',
+      },
+      {
+        onSuccess: () => {
+          showToast('success', 'Meal Logged', 'Your meal has been recorded');
+          setTimeout(() => router.back(), 600);
+        },
+        onError: (error) => {
+          showToast('error', 'Save Failed', error.message || 'Could not save meal');
+        },
+      }
+    );
+  };
+
+  const applyQuickMeal = (meal: { name: string; calories: number; protein: number }) => {
+    setDescription(meal.name);
+    setCalories(meal.calories.toString());
+    setProtein(meal.protein.toString());
+    setShowMacros(true);
   };
 
   return (
@@ -74,7 +110,7 @@ export default function MealLogScreen() {
           />
         </TouchableOpacity>
 
-        {showMacros && (
+        {showMacros ? (
           <View style={styles.macroFields}>
             <View style={styles.macroRow}>
               <View style={styles.macroField}>
@@ -99,14 +135,20 @@ export default function MealLogScreen() {
               </View>
             </View>
           </View>
-        )}
+        ) : null}
 
         <View style={styles.quickMeals}>
           <Text style={styles.quickMealsTitle}>Quick Add</Text>
           <View style={styles.quickMealsGrid}>
-            {['Protein Shake', 'Banana', 'Chicken & Rice', 'Salad'].map((meal) => (
-              <TouchableOpacity key={meal} style={styles.quickMealChip}>
-                <Text style={styles.quickMealText}>{meal}</Text>
+            {QUICK_MEALS.map((meal) => (
+              <TouchableOpacity
+                key={meal.name}
+                style={styles.quickMealChip}
+                onPress={() => applyQuickMeal(meal)}
+                testID={`button-quick-meal-${meal.name.toLowerCase().replace(/\s+/g, '-')}`}
+              >
+                <Text style={styles.quickMealText}>{meal.name}</Text>
+                <Text style={styles.quickMealCals}>{meal.calories} cal</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -115,9 +157,9 @@ export default function MealLogScreen() {
 
       <View style={styles.footer}>
         <Button
-          title="Save Meal"
+          title={logNutrition.isPending ? 'Saving...' : 'Save Meal'}
           onPress={handleSave}
-          disabled={!mealType || !description}
+          disabled={!mealType || !description || logNutrition.isPending}
           testID="button-save-meal"
         />
       </View>
@@ -218,6 +260,12 @@ const styles = StyleSheet.create({
   quickMealText: {
     fontSize: 14,
     color: '#10B981',
+    fontWeight: '500',
+  },
+  quickMealCals: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
   },
   footer: {
     padding: 24,

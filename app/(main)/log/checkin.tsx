@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Input, Slider } from '@/components/ui';
+import { useCreateCheckin } from '@/hooks/useApi';
+import { useToast } from '@/components/ui/Toast';
 
 const LEVEL_ICONS: { name: keyof typeof Ionicons.glyphMap; color: string }[] = [
   { name: 'sad-outline', color: '#EF4444' },
@@ -14,6 +16,8 @@ const LEVEL_ICONS: { name: keyof typeof Ionicons.glyphMap; color: string }[] = [
 
 export default function CheckinScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const createCheckin = useCreateCheckin();
   const [energy, setEnergy] = useState(3);
   const [soreness, setSoreness] = useState(2);
   const [mood, setMood] = useState(3);
@@ -22,7 +26,26 @@ export default function CheckinScreen() {
   const [painNotes, setPainNotes] = useState('');
 
   const handleSave = () => {
-    router.back();
+    createCheckin.mutate(
+      {
+        date: new Date().toISOString().split('T')[0],
+        energyLevel: energy,
+        sorenessLevel: soreness,
+        moodLevel: mood,
+        stressLevel: stress,
+        painFlag,
+        painNotes: painFlag ? painNotes : null,
+      },
+      {
+        onSuccess: () => {
+          showToast('success', 'Check-in Saved', 'Your daily check-in has been recorded');
+          setTimeout(() => router.back(), 600);
+        },
+        onError: (error) => {
+          showToast('error', 'Save Failed', error.message || 'Could not save check-in');
+        },
+      }
+    );
   };
 
   const getLevelIcon = (value: number) => {
@@ -123,7 +146,7 @@ export default function CheckinScreen() {
           />
         </View>
 
-        <Card style={[styles.painCard, painFlag && styles.painCardActive]}>
+        <Card style={[styles.painCard, painFlag ? styles.painCardActive : undefined]}>
           <View style={styles.painHeader}>
             <View style={styles.painLabel}>
               <Ionicons 
@@ -147,7 +170,7 @@ export default function CheckinScreen() {
             />
           </View>
 
-          {painFlag && (
+          {painFlag ? (
             <View style={styles.painNotes}>
               <Input
                 placeholder="Describe where and how it feels..."
@@ -157,14 +180,15 @@ export default function CheckinScreen() {
                 testID="input-pain-notes"
               />
             </View>
-          )}
+          ) : null}
         </Card>
       </ScrollView>
 
       <View style={styles.footer}>
         <Button
-          title="Submit Check-in"
+          title={createCheckin.isPending ? 'Saving...' : 'Submit Check-in'}
           onPress={handleSave}
+          disabled={createCheckin.isPending}
           testID="button-submit-checkin"
         />
       </View>
