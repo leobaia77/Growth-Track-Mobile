@@ -10,6 +10,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Complete workout logging with exercise tracking** - Workout log now supports individual exercise tracking with sets/reps/weight, rest timer with presets (30s/1m/90s/2m/3m), and template auto-population of exercises for strength training templates
+- **All logging screens connected to API** - Check-in, meal, workout, and sleep logging screens now save data to the backend API via react-query mutations with proper error handling
+- **Toast notification system** - App-wide toast notifications (success/error/info/warning) via ToastProvider in root layout, used across all logging screens for save feedback
+- **Sleep logging screen** - New screen with bedtime/wake time sliders, sleep quality rating (5 levels), night wakeup counter, and automatic hours calculation with color-coded guidance
 - **Removed parent/teen distinction** - App now uses general user terminology (user/athlete)
 - **Simplified user roles** - Only 'user' and 'admin' roles exist
 - **Renamed routes** - (teen-onboarding) → (onboarding), (teen-app) → (main)
