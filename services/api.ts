@@ -46,7 +46,15 @@ class ApiService {
       config.body = JSON.stringify(body);
     }
 
-    const response = await fetch(`${this.baseUrl}${endpoint}`, config);
+    const url = `${this.baseUrl}${endpoint}`;
+    
+    let response: Response;
+    try {
+      response = await fetch(url, config);
+    } catch (fetchError) {
+      const errorMessage = fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      throw new Error(`Network request failed: ${errorMessage}. URL: ${url}`);
+    }
 
     if (response.status === 401) {
       await storage.clear();
