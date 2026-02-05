@@ -444,11 +444,7 @@ function ActiveExerciseCard({
 
   return (
     <View style={[exStyles.card, exercise.completed ? exStyles.cardDone : undefined]}>
-      <TouchableOpacity
-        style={exStyles.cardHeader}
-        onPress={() => setExpanded(!expanded)}
-        testID={`button-toggle-exercise-${exercise.id}`}
-      >
+      <View style={exStyles.cardHeader}>
         <TouchableOpacity
           style={[exStyles.checkbox, exercise.completed ? exStyles.checkboxDone : undefined]}
           onPress={onToggleComplete}
@@ -456,23 +452,27 @@ function ActiveExerciseCard({
         >
           {exercise.completed ? <Ionicons name="checkmark" size={16} color="#fff" /> : null}
         </TouchableOpacity>
-        <View style={exStyles.cardInfo}>
+        <TouchableOpacity
+          style={exStyles.cardInfo}
+          onPress={() => setExpanded(!expanded)}
+          testID={`button-toggle-exercise-${exercise.id}`}
+        >
           <Text style={[exStyles.cardName, exercise.completed ? exStyles.cardNameDone : undefined]}>
             {index + 1}. {exercise.name}
           </Text>
           {exercise.description ? (
             <Text style={exStyles.cardDesc} numberOfLines={expanded ? undefined : 1}>{exercise.description}</Text>
           ) : null}
-        </View>
-        <View style={exStyles.cardMeta}>
+        </TouchableOpacity>
+        <TouchableOpacity style={exStyles.cardMeta} onPress={() => setExpanded(!expanded)}>
           {exercise.duration ? (
             <Text style={exStyles.metaText}>{exercise.duration}</Text>
           ) : (
             <Text style={exStyles.metaText}>{completedSets}/{exercise.sets.length} sets</Text>
           )}
           <Ionicons name={expanded ? 'chevron-up' : 'chevron-down'} size={18} color="#94A3B8" />
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
 
       {expanded ? (
         <View style={exStyles.cardBody}>
