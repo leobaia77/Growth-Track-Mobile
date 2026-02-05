@@ -20,7 +20,7 @@ const TRACK_OPTIONS = [
     icon: 'moon',
     color: '#8B5CF6',
     bgColor: '#EDE9FE',
-    route: '/(main)/log/checkin',
+    route: '/(main)/log/sleep-log',
   },
   {
     id: 'workout',
