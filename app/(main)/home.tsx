@@ -1,7 +1,9 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { Card } from '@/components/ui';
 import { storage } from '@/services/storage';
 import type { User } from '@/types';
 import { useRecommendations } from '@/hooks/useApi';
@@ -19,6 +21,7 @@ export default function HomeScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [dismissedEscalations, setDismissedEscalations] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
+  const router = useRouter();
   const { data: recommendations } = useRecommendations();
 
   useEffect(() => {
@@ -90,6 +93,38 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        <View style={styles.quickActions}>
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => router.push('/(main)/log/checkin')}
+            testID="button-quick-checkin"
+            activeOpacity={0.7}
+          >
+            <Card style={styles.actionCardInner}>
+              <View style={[styles.actionIcon, { backgroundColor: '#E8F5F0' }]}>
+                <Ionicons name="heart" size={24} color="#10B981" />
+              </View>
+              <Text style={styles.actionTitle}>Daily Check-in</Text>
+              <Text style={styles.actionDescription}>How are you feeling?</Text>
+            </Card>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.actionCard}
+            onPress={() => router.push('/(main)/log/workout-log')}
+            testID="button-quick-workout"
+            activeOpacity={0.7}
+          >
+            <Card style={styles.actionCardInner}>
+              <View style={[styles.actionIcon, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="fitness" size={24} color="#3B82F6" />
+              </View>
+              <Text style={styles.actionTitle}>Log Workout</Text>
+              <Text style={styles.actionDescription}>Record your training</Text>
+            </Card>
+          </TouchableOpacity>
+        </View>
+
         <EscalationAlertBanner 
           flags={visibleEscalations}
           onDismiss={handleDismissEscalation}
@@ -144,6 +179,37 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 14,
     color: '#64748B',
+  },
+  quickActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  actionCard: {
+    flex: 1,
+  },
+  actionCardInner: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  actionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 4,
+  },
+  actionDescription: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
   },
   footer: {
     height: 24,
