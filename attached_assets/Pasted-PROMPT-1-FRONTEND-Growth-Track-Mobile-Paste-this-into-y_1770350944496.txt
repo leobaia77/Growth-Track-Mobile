@@ -1,0 +1,68 @@
+PROMPT 1: FRONTEND (Growth-Track-Mobile)
+Paste this into your Growth-Track-Mobile Replit chat:
+
+I had an external code audit performed on this app and the backend it connects to (Node-Post-Connect). The audit found critical issues that need your review. I need you to:
+
+Verify each item below — check the actual code to confirm whether the issue exists as described
+Flag YES or NO for each item — does it actually need fixing?
+For every YES, propose a specific fix with file and line reference
+Create a prioritized implementation plan grouped into phases
+
+BLOCKER — Security Word Never Sent During Registration
+File: services/api.ts, register() method
+The register() function accepts a securityWord parameter but the request body sent to the backend is { email, password, displayName, role: 'user' } — the securityWord is never included. The backend IS set up to receive and hash it. This means every user who sets a security word during registration has it silently dropped, and password recovery will always fail.
+Verify: Check the register() method body object. Is securityWord included in the POST body?
+BLOCKER — 12 Broken API Route Paths
+The standalone app uses different URL paths than what the backend actually serves. Every call below will return a 404:
+Frontend callsBackend expectsAffected methodGET /api/brace-schedulesGET /api/scoliosis/brace-schedulegetBraceSchedule()POST /api/brace-schedulesPOST /api/scoliosis/brace-schedulecreateBraceSchedule()PUT /api/brace-schedules/:idPATCH /api/scoliosis/brace-schedule/:idupdateBraceSchedule()GET /api/brace-logsGET /api/scoliosis/brace-logsgetBraceLogs()GET /api/brace-logs/activeGET /api/scoliosis/brace-logs/activegetActiveBraceSession()POST /api/brace-logs/startPOST /api/scoliosis/brace-logs/startstartBraceSession()POST /api/brace-logs/:id/endPOST /api/scoliosis/brace-logs/:id/endendBraceSession()POST /api/brace-logsPOST /api/scoliosis/brace-logscreateBraceLog()GET /api/scoliosis-symptomsGET /api/scoliosis/symptomsgetSymptomLogs()POST /api/scoliosis-symptomsPOST /api/scoliosis/symptomslogSymptoms()GET /api/checkinGET /api/checkins (plural)getCheckins()GET /api/workoutGET /api/workouts (plural)getWorkoutLogs()
+Verify: Open services/api.ts and check each method listed. Do the paths match what I've described?
+BLOCKER — Wrong HTTP Method for Brace Schedule Update
+updateBraceSchedule() sends PUT but the backend route is PATCH. Even if the path were correct, the method mismatch would cause a 404 or 405.
+Verify: Check updateBraceSchedule() — does it use PUT or PATCH?
+BLOCKER — Query Parameter Name Mismatch
+The frontend sends startDate and endDate as query params, but the backend reads start_date and end_date. This affects: getCheckins(), getSleepLogs(), getWorkoutLogs(), getNutritionLogs(), getMentalHealthLogs(). The backend will silently ignore the params and use default date ranges.
+Verify: Check the query parameter names in those GET methods and compare against the backend expectation of start_date / end_date.
+BLOCKER — Two Ghost Endpoints That Don't Exist on Backend
+
+getUserProfile() calls GET /api/user-profile — no such backend route exists
+updateUserProfile() calls PUT /api/user-profile — no such backend route exists
+
+The backend equivalent is GET /api/goals and PUT /api/goals.
+Verify: Search the codebase for any usage of getUserProfile() or updateUserProfile(). Are they called anywhere? If not, they may be dead code.
+HIGH — PT Adherence Path vs Query Param Mismatch
+getPtAdherence(routineId) calls GET /api/pt-adherence/:routineId (path parameter). The backend expects GET /api/pt-adherence?routine_id=X (query parameter).
+Verify: Check getPtAdherence() — how does it pass the routineId?
+HIGH — PT Routines Uses Simpler Endpoint
+getPtRoutines() calls GET /api/pt-routines which returns basic routines. The backend also has GET /api/scoliosis/routines which returns routines WITH their exercises attached. The frontend may be missing exercise data.
+Verify: Check which endpoint getPtRoutines() calls and whether the app needs exercise data in the response.
+HIGH — No Auth Guards on Layout Routes
+From the prior frontend audit: neither app/(main)/_layout.tsx nor app/(admin)/_layout.tsx check if the user is authenticated before rendering. A user can deep-link directly to protected screens without logging in. The admin layout has zero role checking.
+Verify: Check both layout files for any useEffect or redirect logic that checks for a valid token.
+HIGH — Account Settings Save Does Nothing
+app/(main)/settings/account.tsx — the handleSave() function only calls router.back() without sending the updated displayName or email to the backend.
+Verify: Check handleSave() — does it call any API method before navigating back?
+HIGH — Sharing Settings Not Persisted
+app/(main)/settings/sharing.tsx — privacy toggle state is local React state only. handleSave() calls router.back() with no API call or AsyncStorage write.
+Verify: Check if toggle changes are saved anywhere.
+MEDIUM — HealthKit Is Entirely Fake
+services/healthKit.ts returns Math.random() fabricated data. No native HealthKit module is installed. The backend has a real POST /api/health-sync endpoint ready to receive HealthKit data, but the frontend never calls it with real data.
+Verify: Check services/healthKit.ts — are the methods returning real native data or random numbers? Is react-native-health in package.json?
+MEDIUM — No Frontend UI for Required Backend Features
+The backend has endpoints the frontend never calls. Some are required for App Store compliance:
+
+DELETE /api/account — account deletion (Apple requires this)
+GET /api/export-data — data export
+POST /api/push-token — push notification registration
+POST /api/onboarding/complete — onboarding completion flag
+
+Verify: Search the codebase for any calls to these endpoints. Are there UI screens for account deletion or data export?
+MEDIUM — No Password Validation on Registration Screen
+The registration screen only checks that the password is non-empty. The backend requires minimum 8 characters. Users can enter "a" as a password on the frontend and get a confusing backend error.
+Verify: Check app/(auth)/register.tsx — what password validation exists before the API call?
+
+After verifying all items, please create an implementation plan with:
+
+Phase 1 (Critical): All route path fixes, security word fix, query param fixes — these prevent the app from working at all
+Phase 2 (Security): Auth guards, settings persistence, password validation
+Phase 3 (Features): Account deletion UI, data export UI, push token registration, HealthKit decision
+Estimated time per task
