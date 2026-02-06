@@ -306,7 +306,7 @@ class ApiService {
   }
 
   async logPtAdherence(data: unknown) {
-    return this.request('/api/pt-adherence', { method: 'POST', body: data });
+    return this.request('/api/scoliosis/pt-adherence', { method: 'POST', body: data });
   }
 
   async getSymptomLogs(startDate?: string, endDate?: string) {
@@ -321,14 +321,13 @@ class ApiService {
   async registerPushToken(token: string, platform: string) {
     return this.request('/api/push-token', {
       method: 'POST',
-      body: { token, platform },
+      body: { pushToken: token, platform },
     });
   }
 
   async markOnboardingComplete() {
-    return this.request('/api/profile', {
-      method: 'PUT',
-      body: { onboardingComplete: true },
+    return this.request('/api/onboarding/complete', {
+      method: 'POST',
     });
   }
 

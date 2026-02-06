@@ -12,7 +12,6 @@ export default function DataExportScreen() {
   const [isExporting, setIsExporting] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('json');
   const [showExportReadyDialog, setShowExportReadyDialog] = useState(false);
-  const [showEmailSentDialog, setShowEmailSentDialog] = useState(false);
   const [showDownloadReadyDialog, setShowDownloadReadyDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -29,17 +28,6 @@ export default function DataExportScreen() {
       setShowErrorDialog(true);
     } finally {
       setIsExporting(false);
-    }
-  };
-
-  const handleEmailExport = async () => {
-    setShowExportReadyDialog(false);
-    try {
-      await api.request('/api/data-export/email', { method: 'POST', body: { format: selectedFormat } });
-      setShowEmailSentDialog(true);
-    } catch (error) {
-      setErrorMessage('Failed to send email. Please try again.');
-      setShowErrorDialog(true);
     }
   };
 
@@ -170,22 +158,11 @@ export default function DataExportScreen() {
       <ConfirmDialog
         visible={showExportReadyDialog}
         title="Export Ready"
-        message="Your data has been prepared. Would you like to receive it via email?"
-        confirmText="Email Me"
-        cancelText="Cancel"
-        onConfirm={handleEmailExport}
-        onCancel={() => setShowExportReadyDialog(false)}
-        destructive={false}
-      />
-
-      <ConfirmDialog
-        visible={showEmailSentDialog}
-        title="Email Sent"
-        message="Your data export has been sent to your registered email address."
+        message="Your data has been prepared and is ready for download."
         confirmText="OK"
         cancelText="Close"
-        onConfirm={() => setShowEmailSentDialog(false)}
-        onCancel={() => setShowEmailSentDialog(false)}
+        onConfirm={() => setShowExportReadyDialog(false)}
+        onCancel={() => setShowExportReadyDialog(false)}
         destructive={false}
       />
 
