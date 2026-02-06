@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Select } from '@/components/ui';
+import { useToast } from '@/components/ui/Toast';
+import { notificationService, NotificationPreferences } from '@/services/notifications';
 
 const TIME_OPTIONS = [
   { label: '6:00 AM', value: '06:00' },
@@ -13,6 +15,8 @@ const TIME_OPTIONS = [
 
 export default function NotificationsScreen() {
   const router = useRouter();
+  const { showToast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [morningBriefEnabled, setMorningBriefEnabled] = useState(true);
   const [morningBriefTime, setMorningBriefTime] = useState<string | null>('07:00');
   const [checkinReminder, setCheckinReminder] = useState(true);
@@ -20,9 +24,55 @@ export default function NotificationsScreen() {
   const [mealReminder, setMealReminder] = useState(false);
   const [sleepReminder, setSleepReminder] = useState(true);
 
-  const handleSave = () => {
-    router.back();
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const prefs = await notificationService.getPreferences();
+        setMorningBriefEnabled(prefs.morningBriefEnabled);
+        setMorningBriefTime(prefs.morningBriefTime);
+        setCheckinReminder(prefs.checkinReminder);
+        setWorkoutReminder(prefs.workoutReminder);
+        setMealReminder(prefs.mealReminder);
+        setSleepReminder(prefs.sleepReminder);
+      } catch {}
+      setLoading(false);
+    };
+    loadPreferences();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const prefs: NotificationPreferences = {
+        morningBriefEnabled,
+        morningBriefTime: morningBriefTime || '07:00',
+        checkinReminder,
+        workoutReminder,
+        mealReminder,
+        sleepReminder,
+      };
+      await notificationService.savePreferences(prefs);
+      showToast('success', 'Preferences Saved', 'Your notification settings have been updated.');
+    } catch {
+      showToast('error', 'Save Failed', 'Could not save notification preferences. Please try again.');
+    }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#64748B" />
+          </TouchableOpacity>
+          <Text style={styles.title}>Notifications</Text>
+          <View style={styles.placeholder} />
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#10B981" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -35,6 +85,15 @@ export default function NotificationsScreen() {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        {Platform.OS === 'web' ? (
+          <Card style={styles.webInfoCard}>
+            <Ionicons name="phone-portrait-outline" size={20} color="#F59E0B" />
+            <Text style={styles.webInfoText}>
+              Push notifications are only available on mobile devices. Run this app in Expo Go to receive notifications.
+            </Text>
+          </Card>
+        ) : null}
+
         <Text style={styles.sectionTitle}>Morning Brief</Text>
         <Card style={styles.optionCard}>
           <View style={styles.optionRow}>
@@ -53,7 +112,7 @@ export default function NotificationsScreen() {
             />
           </View>
 
-          {morningBriefEnabled && (
+          {morningBriefEnabled ? (
             <View style={styles.timeSection}>
               <Select
                 label="Delivery Time"
@@ -63,7 +122,7 @@ export default function NotificationsScreen() {
                 testID="select-morning-time"
               />
             </View>
-          )}
+          ) : null}
         </Card>
 
         <Text style={styles.sectionTitle}>Reminders</Text>
@@ -168,6 +227,11 @@ const styles = StyleSheet.create({
   placeholder: {
     width: 40,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   content: {
     flex: 1,
     padding: 24,
@@ -244,6 +308,20 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     color: '#64748B',
+    lineHeight: 20,
+  },
+  webInfoCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+    backgroundColor: '#FEF3C7',
+    padding: 16,
+    marginBottom: 24,
+  },
+  webInfoText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#92400E',
     lineHeight: 20,
   },
   footer: {
