@@ -1,473 +1,204 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal, Switch, Alert } from 'react-native';
-import { useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Share, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button, Input, Slider, Select } from '@/components/ui';
-import { useRouter } from 'expo-router';
+import { Card } from '@/components/ui';
 
-interface DayData {
-  date: Date;
-  dayName: string;
-  dayNumber: number;
-  isToday: boolean;
-  activities: Activity[];
-}
-
-interface Activity {
+interface Achievement {
   id: string;
-  name: string;
-  time: string;
-  duration: number;
-  type: string;
-  description?: string;
-  reminder?: boolean;
-  reminderMinutes?: number;
-  completed?: boolean;
+  title: string;
+  description: string;
+  icon: string;
+  color: string;
+  earned: boolean;
+  earnedDate?: string;
+  progress?: number;
+  requirement: string;
 }
 
-const ACTIVITY_TYPES = [
-  { label: 'Training', value: 'training' },
-  { label: 'Game/Match', value: 'game' },
-  { label: 'Weight Lifting', value: 'weightlifting' },
-  { label: 'Swimming', value: 'swimming' },
-  { label: 'Water Polo', value: 'waterpolo' },
-  { label: 'PT/Rehab', value: 'pt' },
-  { label: 'Cardio', value: 'cardio' },
-  { label: 'School', value: 'school' },
-  { label: 'Other', value: 'other' },
+interface ActivityItem {
+  id: string;
+  userName: string;
+  initials: string;
+  action: string;
+  timeAgo: string;
+  color: string;
+}
+
+const ACHIEVEMENTS: Achievement[] = [
+  { id: 'streak_7', title: '7-Day Streak', description: 'Logged health data 7 days in a row', icon: 'flame', color: '#EF4444', earned: true, earnedDate: '2026-01-28', requirement: '7 consecutive days logged' },
+  { id: 'streak_30', title: '30-Day Streak', description: 'Logged health data 30 days in a row', icon: 'flame', color: '#F97316', earned: false, progress: 47, requirement: '30 consecutive days logged' },
+  { id: 'sleep_master', title: 'Sleep Master', description: 'Averaged 8+ hours of sleep for a week', icon: 'moon', color: '#6366F1', earned: true, earnedDate: '2026-02-01', requirement: '8+ hours average sleep for 7 days' },
+  { id: 'iron_will', title: 'Iron Will', description: 'Completed 10 workouts in a month', icon: 'barbell', color: '#10B981', earned: false, progress: 60, requirement: '10 workouts in one month' },
+  { id: 'nutrition_pro', title: 'Nutrition Pro', description: 'Logged all meals for 5 consecutive days', icon: 'nutrition', color: '#F59E0B', earned: true, earnedDate: '2026-02-03', requirement: 'All meals logged for 5 days' },
+  { id: 'pt_champion', title: 'PT Champion', description: 'Completed PT routine 10 times', icon: 'ribbon', color: '#8B5CF6', earned: false, progress: 30, requirement: '10 PT routines completed' },
+  { id: 'mindful', title: 'Mindful Warrior', description: 'Meditated 5 times', icon: 'leaf', color: '#14B8A6', earned: false, progress: 80, requirement: '5 meditation sessions' },
+  { id: 'early_bird', title: 'Early Bird', description: 'Logged a check-in before 8 AM 3 times', icon: 'sunny', color: '#FBBF24', earned: true, earnedDate: '2026-01-30', requirement: '3 check-ins before 8 AM' },
 ];
 
-const WEIGHT_LIFTING_TEMPLATES = [
-  { name: 'Upper Body', duration: 60, description: 'Bench press, rows, shoulder press, curls' },
-  { name: 'Lower Body', duration: 60, description: 'Squats, deadlifts, lunges, leg press' },
-  { name: 'Push Day', duration: 50, description: 'Chest, shoulders, triceps focus' },
-  { name: 'Pull Day', duration: 50, description: 'Back, biceps, rear delts focus' },
-  { name: 'Leg Day', duration: 55, description: 'Quads, hamstrings, glutes, calves' },
-  { name: 'Full Body', duration: 45, description: 'Compound lifts: squat, bench, deadlift' },
-  { name: 'Core & Abs', duration: 30, description: 'Planks, crunches, leg raises' },
-  { name: 'Olympic Lifts', duration: 60, description: 'Clean & jerk, snatch, power cleans' },
-  { name: 'A: Back/Biceps/Calves', duration: 50, description: 'Lat Pulldown (RP), DB Row, Barbell Curl (RP), Calf Raise. RP = Rest-Pause.' },
-  { name: 'B: Chest/Shoulders/Tri', duration: 50, description: 'DB Press (RP), Incline Press, Shoulder Press (RP), Triceps Ext (RP).' },
-  { name: 'C: Legs & Glutes', duration: 55, description: 'Squats, Leg Press (WM), RDL, Leg Curl (WM), Hip Thrust. WM = Widowmaker.' },
-  { name: 'PPL: Push', duration: 45, description: 'Bench, Incline, Shoulder Press, Lateral Raises, Triceps. Progressive overload.' },
-  { name: 'PPL: Pull', duration: 45, description: 'Deadlift, Rows, Lat Pulldown, Face Pulls, Bicep Curls. Form over weight.' },
-  { name: 'PPL: Legs', duration: 50, description: 'Squats, Leg Press, RDL, Extensions, Curls, Calves. Full development.' },
-  { name: 'Upper/Lower: Upper', duration: 50, description: 'Bench, Rows, Shoulder Press, Pull-ups, Arm work. 2-3 sets each.' },
-  { name: 'Upper/Lower: Lower', duration: 50, description: 'Squats, RDL, Leg Press, Lunges, Calves. Compound focus.' },
+const FRIEND_ACTIVITY: ActivityItem[] = [
+  { id: '1', userName: 'Alex M.', initials: 'AM', action: 'earned the 7-Day Streak badge', timeAgo: '2h ago', color: '#EF4444' },
+  { id: '2', userName: 'Sam K.', initials: 'SK', action: 'completed a PT routine', timeAgo: '4h ago', color: '#8B5CF6' },
+  { id: '3', userName: 'Jordan T.', initials: 'JT', action: 'logged a new personal record', timeAgo: '6h ago', color: '#10B981' },
+  { id: '4', userName: 'Riley P.', initials: 'RP', action: 'reached their nutrition goal', timeAgo: '8h ago', color: '#F59E0B' },
+  { id: '5', userName: 'Casey D.', initials: 'CD', action: 'completed a 30-day streak!', timeAgo: '1d ago', color: '#F97316' },
 ];
 
-const SWIMMING_TEMPLATES = [
-  { name: 'Swim Practice', duration: 90, description: 'Warm-up, drills, main set, cool-down' },
-  { name: 'Swim Drills', duration: 60, description: 'Kick sets, pull sets, technique' },
-  { name: 'Sprint Set', duration: 45, description: '10x50m sprints with rest' },
-  { name: 'Distance', duration: 75, description: 'Endurance continuous swim' },
-];
+const earnedCount = ACHIEVEMENTS.filter(a => a.earned).length;
 
-const WATER_POLO_TEMPLATES = [
-  { name: 'WP Practice', duration: 90, description: 'Treading, passing, shooting drills' },
-  { name: 'WP Scrimmage', duration: 60, description: 'Team scrimmage game situations' },
-  { name: 'WP Conditioning', duration: 45, description: 'Eggbeater drills, sprint swims' },
-];
+const shareAchievement = async (achievement: Achievement) => {
+  try {
+    await Share.share({
+      message: `I earned the "${achievement.title}" badge on GrowthTrack! ${achievement.description}`,
+      title: 'GrowthTrack Achievement',
+    });
+  } catch (error) {
+    // Silently handle
+  }
+};
 
-const REMINDER_OPTIONS = [
-  { label: '15 minutes before', value: 15 },
-  { label: '30 minutes before', value: 30 },
-  { label: '1 hour before', value: 60 },
-  { label: '2 hours before', value: 120 },
-];
+const shareWeeklySummary = async () => {
+  try {
+    await Share.share({
+      message: 'My GrowthTrack Weekly Summary: 5 days logged, 3 workouts completed, 7.8 hrs avg sleep. Staying on track!',
+      title: 'GrowthTrack Weekly Summary',
+    });
+  } catch (error) {
+    // Silently handle
+  }
+};
 
-export default function PlanScreen() {
-  const router = useRouter();
-  const [selectedDay, setSelectedDay] = useState(new Date());
-  const [addModalVisible, setAddModalVisible] = useState(false);
-  const [activityType, setActivityType] = useState<string | null>(null);
-  const [activityName, setActivityName] = useState('');
-  const [duration, setDuration] = useState(60);
-  const [intensity, setIntensity] = useState(5);
-  const [notes, setNotes] = useState('');
-  const [reminderEnabled, setReminderEnabled] = useState(true);
-  const [reminderMinutes, setReminderMinutes] = useState(30);
-  const [activityTime, setActivityTime] = useState('4:00 PM');
-  const [plannedActivities, setPlannedActivities] = useState<Activity[]>([
-    { id: '1', name: 'Soccer Practice', time: '4:00 PM', duration: 90, type: 'training', reminder: true, reminderMinutes: 30, completed: false },
-    { id: '2', name: 'Upper Body', time: '6:00 PM', duration: 60, type: 'weightlifting', description: 'Bench press, rows, shoulder press, curls', reminder: true, reminderMinutes: 15, completed: false },
-  ]);
+function AchievementCard({ achievement }: { achievement: Achievement }) {
+  return (
+    <View style={styles.achievementCardWrapper}>
+      <Card style={[styles.achievementCard, !achievement.earned ? styles.achievementCardUnearned : undefined]}>
+        <View style={[styles.achievementIconContainer, { backgroundColor: achievement.earned ? achievement.color + '20' : '#F1F5F9' }]}>
+          <Ionicons
+            name={achievement.icon as any}
+            size={28}
+            color={achievement.earned ? achievement.color : '#94A3B8'}
+          />
+          {achievement.earned ? (
+            <View style={styles.checkBadge}>
+              <Ionicons name="checkmark-circle" size={18} color="#10B981" />
+            </View>
+          ) : null}
+        </View>
+        <Text
+          style={[styles.achievementTitle, !achievement.earned ? styles.achievementTitleUnearned : undefined]}
+          testID={`text-achievement-${achievement.id}`}
+          numberOfLines={1}
+        >
+          {achievement.title}
+        </Text>
+        <Text style={styles.achievementDescription} numberOfLines={2}>
+          {achievement.description}
+        </Text>
+        {achievement.earned ? (
+          <View style={styles.earnedSection}>
+            <Text style={styles.earnedDate}>
+              Earned {new Date(achievement.earnedDate!).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </Text>
+            <TouchableOpacity
+              style={styles.shareButton}
+              onPress={() => shareAchievement(achievement)}
+              testID={`button-share-${achievement.id}`}
+            >
+              <Ionicons name="share-outline" size={14} color="#3B82F6" />
+              <Text style={styles.shareButtonText}>Share</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={styles.progressSection}>
+            <View style={styles.progressBarBackground}>
+              <View style={[styles.progressBarFill, { width: `${achievement.progress || 0}%`, backgroundColor: achievement.color }]} />
+            </View>
+            <Text style={styles.progressText}>{achievement.progress}%</Text>
+          </View>
+        )}
+      </Card>
+    </View>
+  );
+}
 
-  const getWeekDays = (): DayData[] => {
-    const today = new Date();
-    const days: DayData[] = [];
-    
-    for (let i = -3; i <= 3; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      
-      const dayActivities = i === 0 ? plannedActivities : [];
-      
-      days.push({
-        date,
-        dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
-        dayNumber: date.getDate(),
-        isToday: i === 0,
-        activities: dayActivities,
-      });
-    }
-    
-    return days;
-  };
+function ActivityCard({ item }: { item: ActivityItem }) {
+  return (
+    <Card style={styles.activityCard} testID={`card-activity-${item.id}`}>
+      <View style={styles.activityRow}>
+        <View style={[styles.avatar, { backgroundColor: item.color + '20' }]}>
+          <Text style={[styles.avatarText, { color: item.color }]}>{item.initials}</Text>
+        </View>
+        <View style={styles.activityContent}>
+          <Text style={styles.activityText}>
+            <Text style={styles.activityUserName}>{item.userName}</Text>
+            {' '}{item.action}
+          </Text>
+          <Text style={styles.activityTime}>{item.timeAgo}</Text>
+        </View>
+      </View>
+    </Card>
+  );
+}
 
-  const weekDays = getWeekDays();
-
-  const handleAddActivity = () => {
-    const newActivity: Activity = {
-      id: Date.now().toString(),
-      name: activityName || getDefaultName(activityType),
-      time: activityTime,
-      duration,
-      type: activityType || 'other',
-      description: notes,
-      reminder: reminderEnabled,
-      reminderMinutes: reminderEnabled ? reminderMinutes : undefined,
-      completed: false,
-    };
-    
-    setPlannedActivities(prev => [...prev, newActivity]);
-    resetForm();
-    setAddModalVisible(false);
-  };
-
-  const resetForm = () => {
-    setActivityType(null);
-    setActivityName('');
-    setDuration(60);
-    setIntensity(5);
-    setNotes('');
-    setReminderEnabled(true);
-    setReminderMinutes(30);
-    setActivityTime('4:00 PM');
-  };
-
-  const getDefaultName = (type: string | null): string => {
-    switch (type) {
-      case 'weightlifting': return 'Weight Lifting Session';
-      case 'swimming': return 'Swimming Practice';
-      case 'waterpolo': return 'Water Polo Practice';
-      case 'training': return 'Training Session';
-      case 'game': return 'Game/Match';
-      case 'pt': return 'PT/Rehab Session';
-      case 'cardio': return 'Cardio Workout';
-      default: return 'Activity';
-    }
-  };
-
-  const handleAcceptActivity = (activity: Activity) => {
-    setPlannedActivities(prev => 
-      prev.map(a => a.id === activity.id ? { ...a, completed: true } : a)
-    );
-    router.push('/(main)/log/workout-log');
-  };
-
-  const handleDeleteActivity = (activityId: string) => {
-    setPlannedActivities(prev => prev.filter(a => a.id !== activityId));
-  };
-
-  const applyTemplate = (template: { name: string; duration: number; description: string }) => {
-    setActivityName(template.name);
-    setDuration(template.duration);
-    setNotes(template.description);
-  };
-
-  const getTemplatesForType = () => {
-    switch (activityType) {
-      case 'weightlifting': return WEIGHT_LIFTING_TEMPLATES;
-      case 'swimming': return SWIMMING_TEMPLATES;
-      case 'waterpolo': return WATER_POLO_TEMPLATES;
-      default: return [];
-    }
-  };
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'weightlifting': return 'barbell';
-      case 'swimming': return 'water';
-      case 'waterpolo': return 'water';
-      case 'training': return 'football';
-      case 'game': return 'trophy';
-      case 'pt': return 'fitness';
-      case 'cardio': return 'pulse';
-      default: return 'calendar';
-    }
-  };
-
+export default function SocialScreen() {
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Your Plan</Text>
-        <Text style={styles.subtitle}>Schedule and manage activities</Text>
-      </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Social</Text>
+          <Text style={styles.subtitle}>Achievements & Community</Text>
+        </View>
 
-      <View style={styles.weekContainer}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.weekScroll}
-        >
-          {weekDays.map((day, index) => (
-            <TouchableOpacity
-              key={index}
-              style={[
-                styles.dayCard,
-                day.isToday && styles.dayCardToday,
-                day.date.toDateString() === selectedDay.toDateString() && styles.dayCardSelected,
-              ]}
-              onPress={() => setSelectedDay(day.date)}
-            >
-              <Text style={[
-                styles.dayName,
-                day.isToday && styles.dayNameToday,
-                day.date.toDateString() === selectedDay.toDateString() && styles.dayNameSelected,
-              ]}>
-                {day.dayName}
-              </Text>
-              <Text style={[
-                styles.dayNumber,
-                day.isToday && styles.dayNumberToday,
-                day.date.toDateString() === selectedDay.toDateString() && styles.dayNumberSelected,
-              ]}>
-                {day.dayNumber}
-              </Text>
-              {day.activities.length > 0 && (
-                <View style={styles.activityDot} />
-              )}
-            </TouchableOpacity>
+        <Card style={styles.weeklyCard}>
+          <View style={styles.weeklyHeader}>
+            <Ionicons name="calendar" size={20} color="#3B82F6" />
+            <Text style={styles.weeklyTitle}>This Week</Text>
+          </View>
+          <View style={styles.weeklyStats}>
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>5</Text>
+              <Text style={styles.statLabel}>Days Logged</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>3</Text>
+              <Text style={styles.statLabel}>Workouts</Text>
+            </View>
+            <View style={styles.statDivider} />
+            <View style={styles.statItem}>
+              <Text style={styles.statValue}>7.8h</Text>
+              <Text style={styles.statLabel}>Avg Sleep</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.shareWeeklyButton}
+            onPress={shareWeeklySummary}
+            testID="button-share-weekly"
+          >
+            <Ionicons name="share-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.shareWeeklyText}>Share Weekly Summary</Text>
+          </TouchableOpacity>
+        </Card>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Achievements</Text>
+          <Text style={styles.sectionBadge}>{earnedCount}/{ACHIEVEMENTS.length} earned</Text>
+        </View>
+
+        <View style={styles.achievementsGrid}>
+          {ACHIEVEMENTS.map((achievement) => (
+            <AchievementCard key={achievement.id} achievement={achievement} />
           ))}
-        </ScrollView>
-      </View>
-
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.dateHeader}>
-          {selectedDay.toLocaleDateString('en-US', { 
-            weekday: 'long', 
-            month: 'long', 
-            day: 'numeric' 
-          })}
-        </Text>
-
-        {weekDays.find(d => d.date.toDateString() === selectedDay.toDateString())?.activities.map((activity) => (
-          <Card key={activity.id} style={[styles.activityCard, activity.completed && styles.activityCardCompleted]}>
-            <View style={styles.activityHeader}>
-              <View style={[styles.activityIcon, activity.completed && styles.activityIconCompleted]}>
-                <Ionicons name={getActivityIcon(activity.type) as never} size={24} color={activity.completed ? '#94A3B8' : '#10B981'} />
-              </View>
-              <View style={styles.activityInfo}>
-                <Text style={[styles.activityName, activity.completed && styles.activityNameCompleted]}>{activity.name}</Text>
-                <Text style={styles.activityTime}>{activity.time} • {activity.duration} min</Text>
-                {activity.description ? (
-                  <Text style={styles.activityDescription} numberOfLines={1}>{activity.description}</Text>
-                ) : null}
-                {activity.reminder && !activity.completed ? (
-                  <View style={styles.reminderBadge}>
-                    <Ionicons name="notifications" size={12} color="#3B82F6" />
-                    <Text style={styles.reminderText}>{activity.reminderMinutes}min before</Text>
-                  </View>
-                ) : null}
-              </View>
-              <TouchableOpacity onPress={() => handleDeleteActivity(activity.id)} testID={`button-delete-${activity.id}`}>
-                <Ionicons name="trash-outline" size={20} color="#EF4444" />
-              </TouchableOpacity>
-            </View>
-            {!activity.completed ? (
-              <TouchableOpacity 
-                style={styles.acceptButton}
-                onPress={() => handleAcceptActivity(activity)}
-                testID={`button-accept-${activity.id}`}
-              >
-                <Ionicons name="checkmark-circle" size={20} color="#FFFFFF" />
-                <Text style={styles.acceptButtonText}>Accept & Log Workout</Text>
-              </TouchableOpacity>
-            ) : (
-              <View style={styles.completedBadge}>
-                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                <Text style={styles.completedText}>Completed</Text>
-              </View>
-            )}
-          </Card>
-        )) || (
-          <Card style={styles.emptyCard}>
-            <Ionicons name="calendar-outline" size={48} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No activities planned</Text>
-            <Text style={styles.emptyText}>Tap the + button to add an activity</Text>
-          </Card>
-        )}
-
-        <View style={styles.freeTimeBlock}>
-          <View style={styles.freeTimeHeader}>
-            <Ionicons name="time-outline" size={20} color="#10B981" />
-            <Text style={styles.freeTimeTitle}>Available Time</Text>
-          </View>
-          <Text style={styles.freeTimeText}>Evening (5pm - 10pm)</Text>
         </View>
+
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Friend Activity</Text>
+        </View>
+
+        {FRIEND_ACTIVITY.map((item) => (
+          <ActivityCard key={item.id} item={item} />
+        ))}
+
+        <View style={styles.bottomSpacer} />
       </ScrollView>
-
-      <TouchableOpacity 
-        style={styles.fab}
-        onPress={() => setAddModalVisible(true)}
-        testID="button-add-activity"
-      >
-        <Ionicons name="add" size={28} color="#FFFFFF" />
-      </TouchableOpacity>
-
-      <Modal
-        visible={addModalVisible}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setAddModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Activity</Text>
-              <TouchableOpacity onPress={() => setAddModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#374151" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView showsVerticalScrollIndicator={false}>
-              <Select
-                label="Activity Type"
-                placeholder="Select type"
-                options={ACTIVITY_TYPES}
-                value={activityType}
-                onValueChange={(val) => {
-                  setActivityType(val);
-                  setActivityName('');
-                  setNotes('');
-                }}
-                testID="select-activity-type"
-              />
-
-              {getTemplatesForType().length > 0 ? (
-                <View style={styles.templatesSection}>
-                  <Text style={styles.templatesSectionTitle}>Quick Templates</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {getTemplatesForType().map((template, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={styles.templateChip}
-                        onPress={() => applyTemplate(template)}
-                        testID={`button-plan-template-${index}`}
-                      >
-                        <Text style={styles.templateChipName}>{template.name}</Text>
-                        <Text style={styles.templateChipDuration}>{template.duration}min</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              ) : null}
-
-              <Input
-                label="Activity Name"
-                placeholder="e.g., Morning Workout"
-                value={activityName}
-                onChangeText={setActivityName}
-                testID="input-activity-name"
-              />
-
-              <Select
-                label="Time"
-                placeholder="Select time"
-                options={[
-                  { label: '6:00 AM', value: '6:00 AM' },
-                  { label: '7:00 AM', value: '7:00 AM' },
-                  { label: '8:00 AM', value: '8:00 AM' },
-                  { label: '9:00 AM', value: '9:00 AM' },
-                  { label: '10:00 AM', value: '10:00 AM' },
-                  { label: '11:00 AM', value: '11:00 AM' },
-                  { label: '12:00 PM', value: '12:00 PM' },
-                  { label: '1:00 PM', value: '1:00 PM' },
-                  { label: '2:00 PM', value: '2:00 PM' },
-                  { label: '3:00 PM', value: '3:00 PM' },
-                  { label: '4:00 PM', value: '4:00 PM' },
-                  { label: '5:00 PM', value: '5:00 PM' },
-                  { label: '6:00 PM', value: '6:00 PM' },
-                  { label: '7:00 PM', value: '7:00 PM' },
-                  { label: '8:00 PM', value: '8:00 PM' },
-                  { label: '9:00 PM', value: '9:00 PM' },
-                ]}
-                value={activityTime}
-                onValueChange={setActivityTime}
-                testID="select-activity-time"
-              />
-
-              <View style={styles.durationSection}>
-                <Text style={styles.durationLabel}>Duration: {duration} minutes</Text>
-                <Slider
-                  value={duration}
-                  onValueChange={setDuration}
-                  min={15}
-                  max={180}
-                  step={15}
-                  leftLabel="15m"
-                  rightLabel="3h"
-                  showValue={false}
-                  testID="slider-duration"
-                />
-              </View>
-
-              <Slider
-                label="Intensity (RPE)"
-                value={intensity}
-                onValueChange={setIntensity}
-                min={1}
-                max={10}
-                step={1}
-                leftLabel="Easy"
-                rightLabel="Max"
-                testID="slider-intensity"
-              />
-
-              <Input
-                label="Description/Notes"
-                placeholder="Drills, exercises, goals..."
-                value={notes}
-                onChangeText={setNotes}
-                multiline
-                testID="input-activity-notes"
-              />
-
-              <View style={styles.reminderSection}>
-                <View style={styles.reminderRow}>
-                  <View style={styles.reminderLabelContainer}>
-                    <Ionicons name="notifications-outline" size={20} color="#374151" />
-                    <Text style={styles.reminderLabel}>Set Reminder</Text>
-                  </View>
-                  <Switch
-                    value={reminderEnabled}
-                    onValueChange={setReminderEnabled}
-                    trackColor={{ false: '#E2E8F0', true: '#86EFAC' }}
-                    thumbColor={reminderEnabled ? '#10B981' : '#94A3B8'}
-                    testID="switch-reminder"
-                  />
-                </View>
-                {reminderEnabled ? (
-                  <Select
-                    placeholder="Select reminder time"
-                    options={REMINDER_OPTIONS.map(r => ({ label: r.label, value: r.value.toString() }))}
-                    value={reminderMinutes.toString()}
-                    onValueChange={(val) => setReminderMinutes(parseInt(val || '30'))}
-                    testID="select-reminder-time"
-                  />
-                ) : null}
-              </View>
-
-              <Button
-                title="Add Activity"
-                onPress={handleAddActivity}
-                disabled={!activityType}
-                testID="button-confirm-activity"
-              />
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -476,6 +207,12 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: '#F8FAFC',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   header: {
     padding: 24,
@@ -491,286 +228,215 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748B',
   },
-  weekContainer: {
+  weeklyCard: {
+    marginHorizontal: 24,
+    marginBottom: 24,
     backgroundColor: '#FFFFFF',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E8F5F0',
   },
-  weekScroll: {
-    paddingHorizontal: 16,
-    gap: 8,
-  },
-  dayCard: {
-    width: 56,
-    paddingVertical: 12,
+  weeklyHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 12,
-    backgroundColor: '#F8FAFC',
-  },
-  dayCardToday: {
-    backgroundColor: '#E8F5F0',
-  },
-  dayCardSelected: {
-    backgroundColor: '#10B981',
-  },
-  dayName: {
-    fontSize: 12,
-    color: '#64748B',
-    marginBottom: 4,
-  },
-  dayNameToday: {
-    color: '#10B981',
-  },
-  dayNameSelected: {
-    color: '#FFFFFF',
-  },
-  dayNumber: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  dayNumberToday: {
-    color: '#10B981',
-  },
-  dayNumberSelected: {
-    color: '#FFFFFF',
-  },
-  activityDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#10B981',
-    marginTop: 6,
-  },
-  content: {
-    flex: 1,
-    padding: 24,
-  },
-  dateHeader: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
+    gap: 8,
     marginBottom: 16,
   },
-  activityCard: {
-    marginBottom: 12,
-  },
-  activityCardCompleted: {
-    opacity: 0.7,
-    backgroundColor: '#F1F5F9',
-  },
-  activityHeader: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 16,
-  },
-  activityIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#E8F5F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  activityIconCompleted: {
-    backgroundColor: '#E2E8F0',
-  },
-  activityInfo: {
-    flex: 1,
-  },
-  activityName: {
-    fontSize: 16,
+  weeklyTitle: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#1F2937',
   },
-  activityNameCompleted: {
-    textDecorationLine: 'line-through',
-    color: '#94A3B8',
-  },
-  activityTime: {
-    fontSize: 14,
-    color: '#64748B',
-  },
-  activityDescription: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 2,
-  },
-  reminderBadge: {
+  weeklyStats: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 6,
-    backgroundColor: '#EFF6FF',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+    justifyContent: 'space-around',
+    marginBottom: 16,
   },
-  reminderText: {
-    fontSize: 11,
-    color: '#3B82F6',
-    fontWeight: '500',
+  statItem: {
+    alignItems: 'center',
+    flex: 1,
   },
-  acceptButton: {
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#E2E8F0',
+  },
+  shareWeeklyButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#10B981',
+    backgroundColor: '#3B82F6',
     paddingVertical: 12,
     borderRadius: 10,
-    marginTop: 16,
   },
-  acceptButtonText: {
+  shareWeeklyText: {
     color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
-  completedBadge: {
+  sectionHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 12,
+    paddingHorizontal: 24,
+    marginBottom: 12,
   },
-  completedText: {
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  sectionBadge: {
     fontSize: 14,
     color: '#10B981',
-    fontWeight: '500',
-  },
-  emptyCard: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyTitle: {
-    fontSize: 18,
     fontWeight: '600',
-    color: '#374151',
-    marginTop: 16,
   },
-  emptyText: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 8,
-  },
-  freeTimeBlock: {
-    backgroundColor: '#E8F5F0',
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 16,
-  },
-  freeTimeHeader: {
+  achievementsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: 16,
+    marginBottom: 24,
+  },
+  achievementCardWrapper: {
+    width: '50%',
+    padding: 8,
+  },
+  achievementCard: {
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
   },
-  freeTimeTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#10B981',
+  achievementCardUnearned: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
   },
-  freeTimeText: {
-    fontSize: 14,
-    color: '#374151',
-    marginLeft: 28,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 100,
-    right: 24,
+  achievementIconContainer: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#10B981',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: 10,
+    position: 'relative',
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
+  checkBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 24,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  durationSection: {
-    marginBottom: 16,
-  },
-  durationLabel: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 12,
-  },
-  templatesSection: {
-    marginBottom: 16,
-  },
-  templatesSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  templateChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: '#E8F5F0',
     borderRadius: 10,
-    marginRight: 10,
   },
-  templateChipName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#10B981',
+  achievementTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  templateChipDuration: {
+  achievementTitleUnearned: {
+    color: '#94A3B8',
+  },
+  achievementDescription: {
     fontSize: 11,
     color: '#64748B',
-    marginTop: 2,
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 15,
   },
-  reminderSection: {
-    marginBottom: 20,
-    backgroundColor: '#F8FAFC',
-    padding: 16,
-    borderRadius: 12,
-  },
-  reminderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  earnedSection: {
     alignItems: 'center',
-    marginBottom: 12,
+    width: '100%',
   },
-  reminderLabelContainer: {
+  earnedDate: {
+    fontSize: 11,
+    color: '#10B981',
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  shareButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  shareButtonText: {
+    fontSize: 12,
+    color: '#3B82F6',
+    fontWeight: '600',
+  },
+  progressSection: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  reminderLabel: {
-    fontSize: 16,
-    fontWeight: '500',
+  progressBarBackground: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+    minWidth: 28,
+  },
+  activityCard: {
+    marginHorizontal: 24,
+    marginBottom: 8,
+  },
+  activityRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  activityContent: {
+    flex: 1,
+  },
+  activityText: {
+    fontSize: 14,
     color: '#374151',
+    lineHeight: 20,
+  },
+  activityUserName: {
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  activityTime: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  bottomSpacer: {
+    height: 40,
   },
 });

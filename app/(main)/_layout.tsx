@@ -60,11 +60,10 @@ export default function TeenAppLayout() {
       <Tabs.Screen
         name="plan"
         options={{
-          title: 'Plan',
+          title: 'Social',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar" size={size} color={color} />
+            <Ionicons name="people" size={size} color={color} />
           ),
-          href: null,
         }}
       />
       <Tabs.Screen
