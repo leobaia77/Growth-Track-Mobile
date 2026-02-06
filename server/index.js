@@ -16,6 +16,10 @@ app.get('/privacy-policy', (req, res) => {
   res.sendFile(path.join(__dirname, 'privacy-policy.html'));
 });
 
+app.get('/user-guide', (req, res) => {
+  res.sendFile(path.join(__dirname, 'user-guide.html'));
+});
+
 app.use((req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
