@@ -10,6 +10,36 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Phase 5: Social features (Feb 2026)** - Repurposed Plan tab as Social tab with:
+  - Achievement badges (8 milestones: streaks, sleep master, iron will, nutrition pro, PT champion, mindful warrior, early bird)
+  - Native share integration for achievements and weekly summaries via React Native Share API
+  - Friend activity feed with avatar circles and action descriptions
+  - Weekly summary card with stats (days logged, workouts, avg sleep)
+- **Phase 4b: Enhanced PT exercises (Feb 2026)** - PT routine screen now includes:
+  - Detailed exercise instructions with step-by-step guides for all 5 exercises
+  - Target area badges (Spine Mobility, Back & Hips, Core & Pelvis, Lateral Spine, Core & Breathing)
+  - Post-exercise difficulty feedback (1-5 scale) and pain level tracking (none/mild/significant)
+  - Expandable info cards on exercise list with instruction preview
+  - Curvature tracking section in PT log with Cobb angle input, last measured date, and back feeling selector (5 levels)
+- **Phase 4a: Enhanced meal logging (Feb 2026)** - Meal log now includes:
+  - 16 categorized meal templates (protein, carbs, full meals, snacks) with full macro data
+  - Category tab selector for browsing templates
+  - Carbs and fat input fields alongside existing calories and protein
+  - Daily macro summary card with color-coded progress bars (Calories/2000, Protein/120g, Carbs/250g, Fat/65g)
+- **Phase 3: Notifications (Feb 2026)** - expo-notifications integration with:
+  - Scheduled daily reminders (morning brief, check-in, workout, meal, sleep)
+  - Notification preferences screen with toggle controls and time pickers
+  - AsyncStorage persistence for notification settings
+  - Graceful web platform handling
+- **Phase 2: Insights & Charts (Feb 2026)** - SVG-based charts with:
+  - Sleep trend line, workout frequency bars, mood/energy dual-line charts
+  - 7D/30D time range toggle with period-over-period comparison cards
+  - Personal records section (best sleep, most active day, peak mood/energy)
+  - Summary stat cards with visual indicators
+- **Phase 1: UX Improvements (Feb 2026)** - Added across all logging screens:
+  - ConfirmDialog component preventing accidental data loss on 6 logging screens
+  - Structured sleep disturbance categories (10 toggle options)
+  - Simulated HealthKit sleep import button for iOS
 - **Complete workout logging with exercise tracking** - Workout log now supports individual exercise tracking with sets/reps/weight, rest timer with presets (30s/1m/90s/2m/3m), and template auto-population of exercises for strength training templates
 - **All logging screens connected to API** - Check-in, meal, workout, and sleep logging screens now save data to the backend API via react-query mutations with proper error handling
 - **Toast notification system** - App-wide toast notifications (success/error/info/warning) via ToastProvider in root layout, used across all logging screens for save feedback
@@ -54,7 +84,7 @@ The app uses user-focused navigation flows:
 - `/(auth)` - Login and registration screens
 - `/(onboarding)` - 5-step onboarding flow (age-range, goals, sports, availability, connect-health)
 - `/(tabs)` - Main app tabs for general users
-- `/(main)` - Main app features (home, scoliosis care, logging, insights, profile, planning)
+- `/(main)` - Main app features (home, scoliosis care, logging, insights, social, settings)
 - `/(admin)` - Admin dashboard (web-optimized, accessible from profile for admin users)
 
 ### Component Architecture
