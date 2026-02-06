@@ -352,22 +352,28 @@ export default function MentalHealthLogScreen() {
     meditationState === 'complete';
 
   const handleSave = () => {
+    const backendTypeMap: Record<LogType, string> = {
+      meditation: 'general',
+      mood: 'mood',
+      journal: 'general',
+    };
+
     const data: Record<string, unknown> = {
       date: new Date().toISOString().split('T')[0],
-      type: logType,
+      type: backendTypeMap[logType],
     };
 
     if (logType === 'meditation') {
       data.subType = selectedMeditation?.name || 'General';
       data.durationMinutes = meditationDuration;
-      data.notes = meditationNotes;
+      data.notes = `[Meditation] ${meditationNotes}`;
     } else if (logType === 'mood') {
       data.subType = selectedMood?.name || 'General';
       data.moodLevel = moodIntensity;
       data.notes = moodNotes;
     } else if (logType === 'journal') {
       data.subType = selectedJournal?.name || 'Free Write';
-      data.notes = journalEntry;
+      data.notes = `[Journal] ${journalEntry}`;
     }
 
     logMentalHealth.mutate(data, {
