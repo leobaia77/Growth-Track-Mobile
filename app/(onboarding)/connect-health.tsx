@@ -29,7 +29,7 @@ export default function ConnectHealthScreen() {
 
   const handleConnect = async () => {
     if (Platform.OS !== 'ios') {
-      router.replace('/(tabs)');
+      router.replace('/(main)/home');
       return;
     }
 
@@ -44,12 +44,12 @@ export default function ConnectHealthScreen() {
     setIsConnecting(false);
     
     if (success) {
-      router.replace('/(tabs)');
+      router.replace('/(main)/home');
     }
   };
 
   const handleSkip = () => {
-    router.replace('/(tabs)');
+    router.replace('/(main)/home');
   };
 
   const handleBack = () => {

@@ -28,7 +28,7 @@ export default function Index() {
       if (!user.onboardingComplete) {
         router.replace('/(onboarding)/age-range');
       } else {
-        router.replace('/(tabs)');
+        router.replace('/(main)/home');
       }
     } catch {
       await storage.clear();

@@ -83,7 +83,7 @@ export function useAuth() {
     if (!authUser.onboardingComplete) {
       router.replace('/(onboarding)/age-range');
     } else {
-      router.replace('/(tabs)');
+      router.replace('/(main)/home');
     }
   };
 
