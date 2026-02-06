@@ -281,6 +281,38 @@ class ApiService {
   async logSymptoms(data: unknown) {
     return this.request('/api/scoliosis-symptoms', { method: 'POST', body: data });
   }
+
+  async getCheckins(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/checkin${query}`);
+  }
+
+  async getSleepLogs(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/sleep${query}`);
+  }
+
+  async getWorkoutLogs(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/workout${query}`);
+  }
+
+  async getNutritionLogs(startDate?: string, endDate?: string) {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const query = params.toString() ? `?${params}` : '';
+    return this.request(`/api/nutrition${query}`);
+  }
 }
 
 export const api = new ApiService(API_URL);

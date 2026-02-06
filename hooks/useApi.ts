@@ -245,3 +245,31 @@ export function useLogSymptoms() {
     },
   });
 }
+
+export function useCheckins(startDate?: string, endDate?: string) {
+  return useQuery<DailyCheckin[]>({
+    queryKey: ['checkins', startDate, endDate],
+    queryFn: () => api.getCheckins(startDate, endDate) as Promise<DailyCheckin[]>,
+  });
+}
+
+export function useSleepLogs(startDate?: string, endDate?: string) {
+  return useQuery<SleepLog[]>({
+    queryKey: ['sleepLogs', startDate, endDate],
+    queryFn: () => api.getSleepLogs(startDate, endDate) as Promise<SleepLog[]>,
+  });
+}
+
+export function useWorkoutLogs(startDate?: string, endDate?: string) {
+  return useQuery<WorkoutLog[]>({
+    queryKey: ['workoutLogs', startDate, endDate],
+    queryFn: () => api.getWorkoutLogs(startDate, endDate) as Promise<WorkoutLog[]>,
+  });
+}
+
+export function useNutritionLogs(startDate?: string, endDate?: string) {
+  return useQuery<NutritionLog[]>({
+    queryKey: ['nutritionLogs', startDate, endDate],
+    queryFn: () => api.getNutritionLogs(startDate, endDate) as Promise<NutritionLog[]>,
+  });
+}
