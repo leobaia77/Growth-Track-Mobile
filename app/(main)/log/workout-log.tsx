@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Vibration, Platform, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Slider } from '@/components/ui';
+import { Button, Slider, ConfirmDialog } from '@/components/ui';
 import { useLogWorkout } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
 
@@ -564,6 +564,8 @@ export default function WorkoutLogScreen() {
   const [showTimer, setShowTimer] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [workoutPaused, setWorkoutPaused] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [discardAction, setDiscardAction] = useState<'back' | 'home'>('back');
   const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const allCategories = [...WORKOUT_CATEGORIES, ...customCategories];
@@ -725,15 +727,33 @@ export default function WorkoutLogScreen() {
     return 'Maximum Effort';
   };
 
+  const hasWorkoutProgress = elapsedSeconds > 0 || exercises.some(e => e.completed);
+
   const handleBack = () => {
     if (step === 'workout-active') {
-      if (elapsedRef.current) clearInterval(elapsedRef.current);
-      setStep('template-select');
+      if (hasWorkoutProgress) {
+        setDiscardAction('back');
+        setShowDiscardDialog(true);
+      } else {
+        if (elapsedRef.current) clearInterval(elapsedRef.current);
+        setStep('template-select');
+      }
     } else if (step === 'template-select') {
       setStep('type-select');
       setSelectedCategory(null);
     } else {
       router.back();
+    }
+  };
+
+  const handleDiscardConfirm = () => {
+    setShowDiscardDialog(false);
+    if (discardAction === 'back') {
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
+      setStep('template-select');
+    } else {
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
+      router.replace('/(tabs)');
     }
   };
 
@@ -760,7 +780,14 @@ export default function WorkoutLogScreen() {
               <Ionicons name="timer-outline" size={22} color={showTimer ? '#10B981' : '#64748B'} />
             </TouchableOpacity>
           ) : null}
-          <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.homeButton} testID="button-home-workout">
+          <TouchableOpacity onPress={() => {
+            if (step === 'workout-active' && hasWorkoutProgress) {
+              setDiscardAction('home');
+              setShowDiscardDialog(true);
+            } else {
+              router.replace('/(tabs)');
+            }
+          }} style={styles.homeButton} testID="button-home-workout">
             <Ionicons name="home-outline" size={22} color="#64748B" />
           </TouchableOpacity>
         </View>
@@ -982,6 +1009,14 @@ export default function WorkoutLogScreen() {
           </View>
         </>
       ) : null}
+
+      <ConfirmDialog
+        visible={showDiscardDialog}
+        title="Discard Workout?"
+        message="You have an active workout in progress. All exercise data will be lost."
+        onConfirm={handleDiscardConfirm}
+        onCancel={() => setShowDiscardDialog(false)}
+      />
     </SafeAreaView>
   );
 }

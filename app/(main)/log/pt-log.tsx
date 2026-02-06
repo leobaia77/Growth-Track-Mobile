@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button, Input } from '@/components/ui';
+import { Card, Button, Input, ConfirmDialog } from '@/components/ui';
 import { useLogPtAdherence } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
 
@@ -33,7 +33,10 @@ export default function PTLogScreen() {
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentSet, setCurrentSet] = useState(1);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const hasProgress = exercises.some(e => e.completed) || notes !== '';
 
   useEffect(() => {
     return () => {
@@ -127,7 +130,13 @@ export default function PTLogScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} testID="button-back-pt">
+        <TouchableOpacity onPress={() => {
+          if (hasProgress) {
+            setShowDiscardDialog(true);
+          } else {
+            router.back();
+          }
+        }} style={styles.backButton} testID="button-back-pt">
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>PT / Brace Log</Text>
@@ -228,6 +237,17 @@ export default function PTLogScreen() {
           testID="button-complete-routine"
         />
       </View>
+
+      <ConfirmDialog
+        visible={showDiscardDialog}
+        title="Discard PT Log?"
+        message="Your PT exercise progress hasn't been saved yet."
+        onConfirm={() => {
+          setShowDiscardDialog(false);
+          router.back();
+        }}
+        onCancel={() => setShowDiscardDialog(false)}
+      />
 
       <Modal
         visible={timerModalVisible}

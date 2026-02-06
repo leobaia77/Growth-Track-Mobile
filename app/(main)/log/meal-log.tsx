@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button, Input, Select } from '@/components/ui';
+import { Card, Button, Input, Select, ConfirmDialog } from '@/components/ui';
 import { useLogNutrition } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
 
@@ -29,6 +29,9 @@ export default function MealLogScreen() {
   const [calories, setCalories] = useState('');
   const [protein, setProtein] = useState('');
   const [showMacros, setShowMacros] = useState(false);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  const hasFormData = description !== '' || calories !== '' || protein !== '';
 
   const handleSave = () => {
     logNutrition.mutate(
@@ -62,7 +65,13 @@ export default function MealLogScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} testID="button-back-meal">
+        <TouchableOpacity onPress={() => {
+          if (hasFormData) {
+            setShowDiscardDialog(true);
+          } else {
+            router.back();
+          }
+        }} style={styles.backButton} testID="button-back-meal">
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Log Meal</Text>
@@ -163,6 +172,17 @@ export default function MealLogScreen() {
           testID="button-save-meal"
         />
       </View>
+
+      <ConfirmDialog
+        visible={showDiscardDialog}
+        title="Discard Meal Log?"
+        message="Your meal entry hasn't been saved yet."
+        onConfirm={() => {
+          setShowDiscardDialog(false);
+          router.back();
+        }}
+        onCancel={() => setShowDiscardDialog(false)}
+      />
     </SafeAreaView>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button, Input, Slider } from '@/components/ui';
+import { Card, Button, Input, Slider, ConfirmDialog } from '@/components/ui';
 import { useLogSleep } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
 
@@ -34,6 +34,9 @@ export default function SleepLogScreen() {
   const [quality, setQuality] = useState(3);
   const [notes, setNotes] = useState('');
   const [wakeUps, setWakeUps] = useState(0);
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  const hasModified = bedtime !== 22 || wakeTime !== 7 || quality !== 3 || notes !== '' || wakeUps !== 0;
 
   const totalHours = calculateSleepHours(bedtime, wakeTime);
   const qualityIndex = quality - 1;
@@ -74,7 +77,13 @@ export default function SleepLogScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} testID="button-back-sleep">
+        <TouchableOpacity onPress={() => {
+          if (hasModified) {
+            setShowDiscardDialog(true);
+          } else {
+            router.back();
+          }
+        }} style={styles.backButton} testID="button-back-sleep">
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Log Sleep</Text>
@@ -213,6 +222,17 @@ export default function SleepLogScreen() {
           testID="button-save-sleep"
         />
       </View>
+
+      <ConfirmDialog
+        visible={showDiscardDialog}
+        title="Discard Sleep Log?"
+        message="Your sleep data hasn't been saved yet."
+        onConfirm={() => {
+          setShowDiscardDialog(false);
+          router.back();
+        }}
+        onCancel={() => setShowDiscardDialog(false)}
+      />
     </SafeAreaView>
   );
 }

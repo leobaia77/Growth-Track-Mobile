@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Vibration, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, Slider } from '@/components/ui';
+import { Button, Card, Slider, ConfirmDialog } from '@/components/ui';
 import { useLogMentalHealth } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
 
@@ -343,6 +343,13 @@ export default function MentalHealthLogScreen() {
   const [moodNotes, setMoodNotes] = useState('');
   const [selectedJournal, setSelectedJournal] = useState<JournalTemplate | null>(null);
   const [journalEntry, setJournalEntry] = useState('');
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+
+  const hasSubstantiveData =
+    selectedMood !== null ||
+    journalEntry.trim().length > 0 ||
+    meditationState === 'active' ||
+    meditationState === 'complete';
 
   const handleSave = () => {
     const data: Record<string, unknown> = {
@@ -630,7 +637,13 @@ export default function MentalHealthLogScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} testID="button-back-mental-health">
+        <TouchableOpacity onPress={() => {
+          if (hasSubstantiveData) {
+            setShowDiscardDialog(true);
+          } else {
+            router.back();
+          }
+        }} style={styles.backButton} testID="button-back-mental-health">
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mental Health</Text>
@@ -685,6 +698,17 @@ export default function MentalHealthLogScreen() {
           />
         </View>
       ) : null}
+
+      <ConfirmDialog
+        visible={showDiscardDialog}
+        title="Discard Entry?"
+        message="Your mental health log hasn't been saved yet."
+        onConfirm={() => {
+          setShowDiscardDialog(false);
+          router.back();
+        }}
+        onCancel={() => setShowDiscardDialog(false)}
+      />
     </SafeAreaView>
   );
 }

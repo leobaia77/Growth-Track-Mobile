@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button, Input, Slider } from '@/components/ui';
+import { Card, Button, Input, Slider, ConfirmDialog } from '@/components/ui';
 import { useCreateCheckin } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
 
@@ -24,6 +24,13 @@ export default function CheckinScreen() {
   const [stress, setStress] = useState(2);
   const [painFlag, setPainFlag] = useState(false);
   const [painNotes, setPainNotes] = useState('');
+  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+
+  const handleSliderChange = (setter: (v: number) => void) => (value: number) => {
+    setter(value);
+    setHasInteracted(true);
+  };
 
   const handleSave = () => {
     createCheckin.mutate(
@@ -56,7 +63,13 @@ export default function CheckinScreen() {
   return (
     <SafeAreaView style={styles.safe}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton} testID="button-back-checkin">
+        <TouchableOpacity onPress={() => {
+          if (hasInteracted) {
+            setShowDiscardDialog(true);
+          } else {
+            router.back();
+          }
+        }} style={styles.backButton} testID="button-back-checkin">
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Daily Check-in</Text>
@@ -81,7 +94,7 @@ export default function CheckinScreen() {
           </View>
           <Slider
             value={energy}
-            onValueChange={setEnergy}
+            onValueChange={handleSliderChange(setEnergy)}
             min={1}
             max={5}
             step={1}
@@ -99,7 +112,7 @@ export default function CheckinScreen() {
           </View>
           <Slider
             value={soreness}
-            onValueChange={setSoreness}
+            onValueChange={handleSliderChange(setSoreness)}
             min={1}
             max={5}
             step={1}
@@ -117,7 +130,7 @@ export default function CheckinScreen() {
           </View>
           <Slider
             value={mood}
-            onValueChange={setMood}
+            onValueChange={handleSliderChange(setMood)}
             min={1}
             max={5}
             step={1}
@@ -135,7 +148,7 @@ export default function CheckinScreen() {
           </View>
           <Slider
             value={stress}
-            onValueChange={setStress}
+            onValueChange={handleSliderChange(setStress)}
             min={1}
             max={5}
             step={1}
@@ -192,6 +205,17 @@ export default function CheckinScreen() {
           testID="button-submit-checkin"
         />
       </View>
+
+      <ConfirmDialog
+        visible={showDiscardDialog}
+        title="Discard Check-in?"
+        message="Your daily check-in hasn't been saved yet."
+        onConfirm={() => {
+          setShowDiscardDialog(false);
+          router.back();
+        }}
+        onCancel={() => setShowDiscardDialog(false)}
+      />
     </SafeAreaView>
   );
 }
