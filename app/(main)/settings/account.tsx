@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Input, ConfirmDialog } from '@/components/ui';
+import { useToast } from '@/components/ui/Toast';
 import { storage } from '@/services/storage';
 import { api } from '@/services/api';
 import type { User } from '@/types';
 
 export default function AccountScreen() {
   const router = useRouter();
+  const toast = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
@@ -31,8 +34,25 @@ export default function AccountScreen() {
     }
   };
 
-  const handleSave = () => {
-    router.back();
+  const hasChanges = user && (displayName !== user.displayName || email !== user.email);
+
+  const handleSave = async () => {
+    if (!hasChanges) {
+      router.back();
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await api.updateProfile({ displayName: displayName.trim() });
+      const updatedUser = { ...user!, displayName: displayName.trim() };
+      await storage.setUser(updatedUser);
+      toast.show('Changes saved', 'success');
+      router.back();
+    } catch (err) {
+      toast.show('Could not save changes. Please try again.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleSignOut = () => {
@@ -139,8 +159,10 @@ export default function AccountScreen() {
 
       <View style={styles.footer}>
         <Button
-          title="Save Changes"
+          title={isSaving ? "Saving..." : "Save Changes"}
           onPress={handleSave}
+          disabled={isSaving}
+          loading={isSaving}
           testID="button-save-account"
         />
       </View>

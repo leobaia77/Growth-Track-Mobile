@@ -20,19 +20,32 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [securityWord, setSecurityWord] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
   const { register, isLoading, error } = useAuth();
 
   const handleRegister = async () => {
     if (!displayName.trim() || !email.trim() || !password || !securityWord.trim()) {
       return;
     }
+    if (password.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+    setPasswordError('');
     try {
       await register(email.trim(), password, displayName.trim(), securityWord.trim());
     } catch {
     }
   };
 
-  const isValid = displayName.trim() && email.trim() && password && securityWord.trim();
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (passwordError && text.length >= 8) {
+      setPasswordError('');
+    }
+  };
+
+  const isValid = displayName.trim() && email.trim() && password.length >= 8 && securityWord.trim();
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -83,9 +96,9 @@ export default function RegisterScreen() {
             <View style={styles.passwordContainer}>
               <Input
                 label="Password"
-                placeholder="Create a password"
+                placeholder="Create a password (min 8 characters)"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={handlePasswordChange}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 testID="input-register-password"
@@ -101,6 +114,9 @@ export default function RegisterScreen() {
                 />
               </TouchableOpacity>
             </View>
+            {passwordError ? (
+              <Text style={styles.fieldError} testID="text-password-error">{passwordError}</Text>
+            ) : null}
 
             <Input
               label="Security Word"
@@ -198,6 +214,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: 38,
+  },
+  fieldError: {
+    fontSize: 13,
+    color: '#EF4444',
+    marginBottom: 8,
+    marginTop: -4,
   },
   securityHint: {
     fontSize: 13,

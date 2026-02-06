@@ -1,8 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Card, Button } from '@/components/ui';
+import { useToast } from '@/components/ui/Toast';
+
+const SHARING_STORAGE_KEY = 'sharing_preferences';
 
 interface SharingOption {
   id: string;
@@ -11,7 +15,7 @@ interface SharingOption {
   enabled: boolean;
 }
 
-const SHARING_OPTIONS: SharingOption[] = [
+const DEFAULT_SHARING_OPTIONS: SharingOption[] = [
   { id: 'sleep_trends', title: 'Sleep Trends', description: 'Weekly sleep averages', enabled: true },
   { id: 'sleep_detailed', title: 'Detailed Sleep Logs', description: 'Daily sleep times', enabled: false },
   { id: 'training_trends', title: 'Training Trends', description: 'Weekly training hours', enabled: true },
@@ -24,7 +28,26 @@ const SHARING_OPTIONS: SharingOption[] = [
 
 export default function SharingScreen() {
   const router = useRouter();
-  const [options, setOptions] = useState<SharingOption[]>(SHARING_OPTIONS);
+  const toast = useToast();
+  const [options, setOptions] = useState<SharingOption[]>(DEFAULT_SHARING_OPTIONS);
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    loadSavedPreferences();
+  }, []);
+
+  const loadSavedPreferences = async () => {
+    try {
+      const saved = await AsyncStorage.getItem(SHARING_STORAGE_KEY);
+      if (saved) {
+        const savedMap: Record<string, boolean> = JSON.parse(saved);
+        setOptions(prev => prev.map(opt => ({
+          ...opt,
+          enabled: savedMap[opt.id] !== undefined ? savedMap[opt.id] : opt.enabled,
+        })));
+      }
+    } catch {}
+  };
 
   const toggleOption = (id: string) => {
     setOptions(options.map(opt => 
@@ -32,8 +55,19 @@ export default function SharingScreen() {
     ));
   };
 
-  const handleSave = () => {
-    router.back();
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      const prefsMap: Record<string, boolean> = {};
+      options.forEach(opt => { prefsMap[opt.id] = opt.enabled; });
+      await AsyncStorage.setItem(SHARING_STORAGE_KEY, JSON.stringify(prefsMap));
+      toast.show('Preferences saved', 'success');
+      router.back();
+    } catch {
+      toast.show('Could not save preferences. Please try again.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -64,7 +98,7 @@ export default function SharingScreen() {
               key={option.id}
               style={[
                 styles.optionItem,
-                index < options.length - 1 && styles.optionItemBorder,
+                index < options.length - 1 ? styles.optionItemBorder : undefined,
               ]}
             >
               <View style={styles.optionInfo}>
@@ -93,8 +127,10 @@ export default function SharingScreen() {
 
       <View style={styles.footer}>
         <Button
-          title="Save Preferences"
+          title={isSaving ? "Saving..." : "Save Preferences"}
           onPress={handleSave}
+          disabled={isSaving}
+          loading={isSaving}
           testID="button-save-sharing"
         />
       </View>

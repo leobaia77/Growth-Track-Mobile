@@ -1,7 +1,38 @@
-import { Tabs } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { storage } from '@/services/storage';
 
-export default function TeenAppLayout() {
+export default function MainAppLayout() {
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = await storage.getToken();
+        if (!token) {
+          router.replace('/(auth)/login');
+          return;
+        }
+      } catch {
+        router.replace('/(auth)/login');
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    checkAuth();
+  }, []);
+
+  if (isChecking) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F8FAFC' }}>
+        <ActivityIndicator size="large" color="#10B981" />
+      </View>
+    );
+  }
+
   return (
     <Tabs
       screenOptions={{
