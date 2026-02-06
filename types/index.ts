@@ -73,7 +73,7 @@ export interface DailyCheckin {
   sorenessLevel: number;
   moodLevel: number;
   stressLevel: number;
-  painFlag: boolean;
+  hasPainFlag: boolean;
   painNotes: string | null;
 }
 
@@ -101,9 +101,11 @@ export interface NutritionLog {
   userId: number;
   date: string;
   mealType: string;
-  description: string | null;
+  notes: string | null;
   calories: number | null;
-  protein: number | null;
+  proteinG: number | null;
+  carbsG: number | null;
+  fatG: number | null;
   source: string;
 }
 
