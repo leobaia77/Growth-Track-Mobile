@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, ConfirmDialog } from '@/components/ui';
-import { apiService } from '@/services/api';
+import { api } from '@/services/api';
 
 type ExportFormat = 'json' | 'csv';
 
@@ -21,7 +21,7 @@ export default function DataExportScreen() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await apiService.get(`/api/data-export?format=${selectedFormat}`);
+      const response = await api.request(`/api/data-export?format=${selectedFormat}`);
       setExportResponse(response);
       setShowExportReadyDialog(true);
     } catch (error) {
@@ -35,7 +35,7 @@ export default function DataExportScreen() {
   const handleEmailExport = async () => {
     setShowExportReadyDialog(false);
     try {
-      await apiService.post('/api/data-export/email', { format: selectedFormat });
+      await api.request('/api/data-export/email', { method: 'POST', body: { format: selectedFormat } });
       setShowEmailSentDialog(true);
     } catch (error) {
       setErrorMessage('Failed to send email. Please try again.');
