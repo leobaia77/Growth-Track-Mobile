@@ -277,24 +277,39 @@ export default function InsightsScreen() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d'>('7d');
 
   const getDateRange = () => {
+    const days = timeRange === '7d' ? 7 : 30;
     const end = new Date();
     const start = new Date();
-    start.setDate(start.getDate() - (timeRange === '7d' ? 7 : 30));
+    start.setDate(start.getDate() - days);
+    const prevEnd = new Date(start);
+    prevEnd.setDate(prevEnd.getDate() - 1);
+    const prevStart = new Date(prevEnd);
+    prevStart.setDate(prevStart.getDate() - days);
     return {
       startDate: start.toISOString().split('T')[0],
       endDate: end.toISOString().split('T')[0],
+      prevStartDate: prevStart.toISOString().split('T')[0],
+      prevEndDate: prevEnd.toISOString().split('T')[0],
     };
   };
 
-  const { startDate, endDate } = getDateRange();
+  const { startDate, endDate, prevStartDate, prevEndDate } = getDateRange();
 
   const { data: sleepRaw, isLoading: sleepLoading } = useSleepLogs(startDate, endDate);
   const { data: workoutRaw, isLoading: workoutLoading } = useWorkoutLogs(startDate, endDate);
   const { data: checkinRaw, isLoading: checkinLoading } = useCheckins(startDate, endDate);
 
+  const { data: prevSleepRaw } = useSleepLogs(prevStartDate, prevEndDate);
+  const { data: prevWorkoutRaw } = useWorkoutLogs(prevStartDate, prevEndDate);
+  const { data: prevCheckinRaw } = useCheckins(prevStartDate, prevEndDate);
+
   const sleepData = useMemo(() => (Array.isArray(sleepRaw) ? sleepRaw : []), [sleepRaw]);
   const workoutData = useMemo(() => (Array.isArray(workoutRaw) ? workoutRaw : []), [workoutRaw]);
   const checkinData = useMemo(() => (Array.isArray(checkinRaw) ? checkinRaw : []), [checkinRaw]);
+
+  const prevSleepData = useMemo(() => (Array.isArray(prevSleepRaw) ? prevSleepRaw : []), [prevSleepRaw]);
+  const prevWorkoutData = useMemo(() => (Array.isArray(prevWorkoutRaw) ? prevWorkoutRaw : []), [prevWorkoutRaw]);
+  const prevCheckinData = useMemo(() => (Array.isArray(prevCheckinRaw) ? prevCheckinRaw : []), [prevCheckinRaw]);
 
   const isLoading = sleepLoading || workoutLoading || checkinLoading;
 
@@ -337,7 +352,51 @@ export default function InsightsScreen() {
     return count;
   }, [sleepData, workoutData, checkinData]);
 
+  const prevAvgSleep = useMemo(() => {
+    if (prevSleepData.length === 0) return 0;
+    const total = prevSleepData.reduce((sum, s) => sum + (parseFloat(s.totalHours) || 0), 0);
+    return Math.round((total / prevSleepData.length) * 10) / 10;
+  }, [prevSleepData]);
+
+  const prevWorkoutCount = prevWorkoutData.length;
+
+  const prevAvgMood = useMemo(() => {
+    if (prevCheckinData.length === 0) return 0;
+    const total = prevCheckinData.reduce((sum, c) => sum + (c.moodLevel || 0), 0);
+    return Math.round((total / prevCheckinData.length) * 10) / 10;
+  }, [prevCheckinData]);
+
+  const sleepChange = avgSleep > 0 && prevAvgSleep > 0 ? Math.round((avgSleep - prevAvgSleep) * 10) / 10 : null;
+  const workoutChange = workoutCount > 0 || prevWorkoutCount > 0 ? workoutCount - prevWorkoutCount : null;
+  const moodChange = avgMood > 0 && prevAvgMood > 0 ? Math.round((avgMood - prevAvgMood) * 10) / 10 : null;
+
+  const personalRecords = useMemo(() => {
+    const records: { label: string; value: string; icon: keyof typeof Ionicons.glyphMap; color: string }[] = [];
+    if (sleepData.length > 0) {
+      const best = Math.max(...sleepData.map(s => parseFloat(s.totalHours) || 0));
+      records.push({ label: 'Best Sleep', value: `${best.toFixed(1)}h`, icon: 'moon', color: '#6366F1' });
+    }
+    if (workoutData.length > 0) {
+      const grouped: Record<string, number> = {};
+      workoutData.forEach(w => {
+        const d = w.date.split('T')[0];
+        grouped[d] = (grouped[d] || 0) + 1;
+      });
+      const maxDay = Math.max(...Object.values(grouped));
+      records.push({ label: 'Most Active Day', value: `${maxDay} workout${maxDay !== 1 ? 's' : ''}`, icon: 'barbell', color: '#EF4444' });
+    }
+    if (checkinData.length > 0) {
+      const best = Math.max(...checkinData.map(c => c.moodLevel || 0));
+      records.push({ label: 'Peak Mood', value: `${best}/5`, icon: 'happy', color: '#8B5CF6' });
+      const bestEnergy = Math.max(...checkinData.map(c => c.energyLevel || 0));
+      records.push({ label: 'Peak Energy', value: `${bestEnergy}/5`, icon: 'flash', color: '#F59E0B' });
+    }
+    return records;
+  }, [sleepData, workoutData, checkinData]);
+
   const hasAnyData = sleepData.length > 0 || workoutData.length > 0 || checkinData.length > 0;
+  const hasPrevData = prevSleepData.length > 0 || prevWorkoutData.length > 0 || prevCheckinData.length > 0;
+  const periodLabel = timeRange === '7d' ? 'week' : 'month';
 
   return (
     <SafeAreaView style={styles.safe} testID="insights-screen">
@@ -393,6 +452,52 @@ export default function InsightsScreen() {
                 <Text style={styles.statLabel}>Day Streak</Text>
               </Card>
             </ScrollView>
+
+            {hasAnyData && hasPrevData ? (
+              <View style={styles.section} testID="comparison-section">
+                <Text style={styles.sectionTitle}>vs Previous {periodLabel}</Text>
+                <View style={styles.comparisonRow}>
+                  {sleepChange !== null ? (
+                    <Card style={styles.comparisonCard}>
+                      <Ionicons name={sleepChange >= 0 ? 'arrow-up' : 'arrow-down'} size={16} color={sleepChange >= 0 ? '#10B981' : '#EF4444'} />
+                      <Text style={[styles.comparisonValue, { color: sleepChange >= 0 ? '#10B981' : '#EF4444' }]}>{sleepChange > 0 ? '+' : ''}{sleepChange}h</Text>
+                      <Text style={styles.comparisonLabel}>Sleep</Text>
+                    </Card>
+                  ) : null}
+                  {workoutChange !== null ? (
+                    <Card style={styles.comparisonCard}>
+                      <Ionicons name={workoutChange >= 0 ? 'arrow-up' : 'arrow-down'} size={16} color={workoutChange >= 0 ? '#10B981' : '#EF4444'} />
+                      <Text style={[styles.comparisonValue, { color: workoutChange >= 0 ? '#10B981' : '#EF4444' }]}>{workoutChange > 0 ? '+' : ''}{workoutChange}</Text>
+                      <Text style={styles.comparisonLabel}>Workouts</Text>
+                    </Card>
+                  ) : null}
+                  {moodChange !== null ? (
+                    <Card style={styles.comparisonCard}>
+                      <Ionicons name={moodChange >= 0 ? 'arrow-up' : 'arrow-down'} size={16} color={moodChange >= 0 ? '#10B981' : '#EF4444'} />
+                      <Text style={[styles.comparisonValue, { color: moodChange >= 0 ? '#10B981' : '#EF4444' }]}>{moodChange > 0 ? '+' : ''}{moodChange}</Text>
+                      <Text style={styles.comparisonLabel}>Mood</Text>
+                    </Card>
+                  ) : null}
+                </View>
+              </View>
+            ) : null}
+
+            {personalRecords.length > 0 ? (
+              <View style={styles.section} testID="pr-section">
+                <Text style={styles.sectionTitle}>Personal Records</Text>
+                <View style={styles.prRow}>
+                  {personalRecords.map((pr, i) => (
+                    <Card key={`pr-${i}`} style={styles.prCard}>
+                      <View style={[styles.prIconBg, { backgroundColor: pr.color + '18' }]}>
+                        <Ionicons name={pr.icon} size={20} color={pr.color} />
+                      </View>
+                      <Text style={styles.prValue}>{pr.value}</Text>
+                      <Text style={styles.prLabel}>{pr.label}</Text>
+                    </Card>
+                  ))}
+                </View>
+              </View>
+            ) : null}
 
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Sleep Trends</Text>
@@ -569,6 +674,56 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 12,
     color: '#64748B',
+  },
+  comparisonRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  comparisonCard: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+  },
+  comparisonValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  comparisonLabel: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  prRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  prCard: {
+    width: (SCREEN_WIDTH - 48 - 10) / 2 - 1,
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+  },
+  prIconBg: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  prValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 2,
+  },
+  prLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
   },
   tipCard: {
     flexDirection: 'row',
