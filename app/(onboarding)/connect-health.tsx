@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card, ProgressBar } from '@/components/ui';
 import { useHealthKitSync } from '@/hooks/useHealthKitSync';
+import { api } from '@/services/api';
 
 const DATA_TYPES = [
   { id: 'sleep', name: 'Sleep Analysis', icon: 'moon-outline' as const, description: 'Bedtime, wake time, sleep quality' },
@@ -27,9 +28,16 @@ export default function ConnectHealthScreen() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [showPermissionPrompt, setShowPermissionPrompt] = useState(false);
 
+  const completeOnboarding = async () => {
+    try {
+      await api.markOnboardingComplete();
+    } catch {}
+    router.replace('/(main)/home');
+  };
+
   const handleConnect = async () => {
     if (Platform.OS !== 'ios') {
-      router.replace('/(main)/home');
+      await completeOnboarding();
       return;
     }
 
@@ -44,12 +52,12 @@ export default function ConnectHealthScreen() {
     setIsConnecting(false);
     
     if (success) {
-      router.replace('/(main)/home');
+      await completeOnboarding();
     }
   };
 
-  const handleSkip = () => {
-    router.replace('/(main)/home');
+  const handleSkip = async () => {
+    await completeOnboarding();
   };
 
   const handleBack = () => {

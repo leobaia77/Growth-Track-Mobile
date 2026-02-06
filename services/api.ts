@@ -318,6 +318,20 @@ class ApiService {
     return this.request('/api/scoliosis/symptoms', { method: 'POST', body: data });
   }
 
+  async registerPushToken(token: string, platform: string) {
+    return this.request('/api/push-token', {
+      method: 'POST',
+      body: { token, platform },
+    });
+  }
+
+  async markOnboardingComplete() {
+    return this.request('/api/profile', {
+      method: 'PUT',
+      body: { onboardingComplete: true },
+    });
+  }
+
   async getCheckins(startDate?: string, endDate?: string) {
     const query = this.buildDateQuery(startDate, endDate);
     return this.request(`/api/checkins${query}`);

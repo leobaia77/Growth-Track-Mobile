@@ -9,7 +9,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
-    shouldShowInForeground: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -41,6 +42,18 @@ export const notificationService = {
       finalStatus = status;
     }
     return finalStatus === 'granted';
+  },
+
+  async getPushToken(): Promise<string | null> {
+    if (Platform.OS === 'web') return null;
+    try {
+      const hasPermission = await this.requestPermission();
+      if (!hasPermission) return null;
+      const tokenData = await Notifications.getExpoPushTokenAsync();
+      return tokenData.data;
+    } catch {
+      return null;
+    }
   },
 
   async getPreferences(): Promise<NotificationPreferences> {

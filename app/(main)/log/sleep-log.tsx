@@ -191,6 +191,15 @@ export default function SleepLogScreen() {
           <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
         </TouchableOpacity>
 
+        {Platform.OS === 'web' ? (
+          <Card style={styles.healthKitDisclaimer}>
+            <Ionicons name="information-circle" size={18} color="#F59E0B" />
+            <Text style={styles.healthKitDisclaimerText}>
+              Apple Health import requires an iPhone with Expo Go. On this device, data is entered manually.
+            </Text>
+          </Card>
+        ) : null}
+
         <View style={styles.timeSection}>
           <Text style={styles.sectionTitle}>Bedtime</Text>
           <View style={styles.timeDisplay}>
@@ -556,6 +565,21 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tipText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#92400E',
+    lineHeight: 18,
+  },
+  healthKitDisclaimer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#FEF3C7',
+    padding: 12,
+    marginTop: 8,
+    marginBottom: 8,
+  },
+  healthKitDisclaimerText: {
     flex: 1,
     fontSize: 13,
     color: '#92400E',

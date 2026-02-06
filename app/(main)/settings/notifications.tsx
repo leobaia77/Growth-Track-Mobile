@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Select } from '@/components/ui';
 import { useToast } from '@/components/ui/Toast';
 import { notificationService, NotificationPreferences } from '@/services/notifications';
+import { api } from '@/services/api';
 
 const TIME_OPTIONS = [
   { label: '6:00 AM', value: '06:00' },
@@ -51,6 +52,17 @@ export default function NotificationsScreen() {
         sleepReminder,
       };
       await notificationService.savePreferences(prefs);
+
+      const anyEnabled = morningBriefEnabled || checkinReminder || workoutReminder || mealReminder || sleepReminder;
+      if (anyEnabled) {
+        const token = await notificationService.getPushToken();
+        if (token) {
+          try {
+            await api.registerPushToken(token, Platform.OS);
+          } catch {}
+        }
+      }
+
       showToast('success', 'Preferences Saved', 'Your notification settings have been updated.');
     } catch {
       showToast('error', 'Save Failed', 'Could not save notification preferences. Please try again.');
