@@ -227,7 +227,7 @@ export default function ResourcesScreen() {
           </View>
           <TouchableOpacity 
             style={styles.helpButton}
-            data-testid="button-contact-provider"
+            testID="button-contact-provider"
           >
             <Text style={styles.helpButtonText}>Contact Provider</Text>
           </TouchableOpacity>

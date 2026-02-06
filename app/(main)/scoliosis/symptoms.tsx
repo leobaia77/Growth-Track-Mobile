@@ -103,7 +103,7 @@ export default function SymptomsScreen() {
                   }
                 ]}
                 onPress={() => setDiscomfortLevel(level)}
-                data-testid={`button-discomfort-${level}`}
+                testID={`button-discomfort-${level}`}
               >
                 <Text style={[
                   styles.discomfortNumber,
@@ -139,7 +139,7 @@ export default function SymptomsScreen() {
                     location.selected && styles.painPointActive
                   ]}
                   onPress={() => togglePainLocation(location.id)}
-                  data-testid={`button-pain-${location.id}`}
+                  testID={`button-pain-${location.id}`}
                 >
                   {location.selected && (
                     <Ionicons name="close" size={12} color="#FFFFFF" />
@@ -177,7 +177,7 @@ export default function SymptomsScreen() {
             onChangeText={setNewSymptoms}
             multiline
             numberOfLines={3}
-            data-testid="input-new-symptoms"
+            testID="input-new-symptoms"
           />
         </Card>
 
@@ -195,7 +195,7 @@ export default function SymptomsScreen() {
               key={flag.id}
               style={[styles.redFlagItem, selectedRedFlags.includes(flag.id) && styles.redFlagItemActive]}
               onPress={() => toggleRedFlag(flag.id)}
-              data-testid={`button-redflag-${flag.id}`}
+              testID={`button-redflag-${flag.id}`}
             >
               <View style={[styles.checkbox, selectedRedFlags.includes(flag.id) && styles.checkboxActive]}>
                 {selectedRedFlags.includes(flag.id) && (
@@ -217,7 +217,7 @@ export default function SymptomsScreen() {
             onChangeText={setNotes}
             multiline
             numberOfLines={3}
-            data-testid="input-notes"
+            testID="input-notes"
           />
         </Card>
 
@@ -226,7 +226,7 @@ export default function SymptomsScreen() {
           onPress={handleSubmit}
           disabled={logSymptoms.isPending}
           style={styles.submitButton}
-          data-testid="button-save-symptoms"
+          testID="button-save-symptoms"
         />
 
         <View style={styles.footer} />

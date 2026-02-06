@@ -76,7 +76,7 @@ export default function BraceTrackerScreen() {
             style={[styles.startButton, activeSession && styles.stopButton]}
             onPress={handleStartStop}
             disabled={startSession.isPending || endSession.isPending}
-            data-testid="button-start-stop-brace"
+            testID="button-start-stop-brace"
           >
             <Ionicons 
               name={activeSession ? 'stop' : 'play'} 

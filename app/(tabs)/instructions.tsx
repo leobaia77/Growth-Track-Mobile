@@ -64,20 +64,22 @@ const GUIDE_SECTIONS: GuideSection[] = [
 ];
 
 const HELPFUL_LINKS = [
-  { id: 'privacy', title: 'Privacy Policy', icon: 'shield-checkmark-outline', url: 'https://growthtrack.app/privacy' },
-  { id: 'terms', title: 'Terms of Service', icon: 'document-text-outline', url: 'https://growthtrack.app/terms' },
+  { id: 'privacy', title: 'Privacy Policy', icon: 'shield-checkmark-outline', route: '/(main)/settings/privacy-policy' },
   { id: 'support', title: 'Contact Support', icon: 'mail-outline', url: 'mailto:support@growthtrack.app' },
-  { id: 'faq', title: 'FAQs', icon: 'help-circle-outline', url: 'https://growthtrack.app/faq' },
 ];
 
 export default function InstructionsScreen() {
   const router = useRouter();
 
-  const handleLinkPress = async (url: string) => {
-    try {
-      await Linking.openURL(url);
-    } catch (error) {
-      console.log('Failed to open URL:', error);
+  const handleLinkPress = async (link: typeof HELPFUL_LINKS[0]) => {
+    if ('route' in link && link.route) {
+      router.push(link.route as any);
+    } else if ('url' in link && link.url) {
+      try {
+        await Linking.openURL(link.url);
+      } catch (error) {
+        console.log('Failed to open URL:', error);
+      }
     }
   };
 
@@ -135,7 +137,7 @@ export default function InstructionsScreen() {
                 styles.linkItem,
                 index < HELPFUL_LINKS.length - 1 && styles.linkItemBorder,
               ]}
-              onPress={() => handleLinkPress(link.url)}
+              onPress={() => handleLinkPress(link)}
               testID={`link-${link.id}`}
             >
               <View style={styles.linkLeft}>

@@ -138,7 +138,7 @@ export default function ScoliosisDashboardScreen() {
             <TouchableOpacity 
               style={styles.reminderButton}
               onPress={() => router.push('/scoliosis/symptoms')}
-              data-testid="button-log-symptoms"
+              testID="button-log-symptoms"
             >
               <Text style={styles.reminderButtonText}>Log Now</Text>
             </TouchableOpacity>

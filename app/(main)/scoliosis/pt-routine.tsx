@@ -288,7 +288,7 @@ export default function PTRoutineScreen() {
               style={styles.exerciseContent}
               onPress={() => startExercise(exercise)}
               disabled={exercise.completed}
-              data-testid={`button-exercise-${index}`}
+              testID={`button-exercise-${index}`}
             >
               <View style={styles.exerciseLeft}>
                 <View style={[styles.exerciseNumber, exercise.completed && styles.exerciseNumberCompleted]}>
@@ -373,7 +373,7 @@ export default function PTRoutineScreen() {
           title={completedCount === exercises.length ? 'Complete Session' : 'Save & Exit'}
           onPress={handleComplete}
           style={styles.completeButton}
-          data-testid="button-complete-session"
+          testID="button-complete-session"
         />
 
         <View style={styles.footer} />
@@ -431,7 +431,7 @@ export default function PTRoutineScreen() {
                   <TouchableOpacity
                     style={[styles.timerButton, isTimerRunning && styles.pauseButton]}
                     onPress={toggleTimer}
-                    data-testid="button-timer-toggle"
+                    testID="button-timer-toggle"
                   >
                     <Ionicons name={isTimerRunning ? 'pause' : 'play'} size={32} color="#FFFFFF" />
                   </TouchableOpacity>
@@ -444,14 +444,14 @@ export default function PTRoutineScreen() {
                       onPress={nextSet}
                       disabled={timeRemaining > 0}
                       style={styles.modalButton}
-                      data-testid="button-next-set"
+                      testID="button-next-set"
                     />
                   ) : (
                     <Button
                       title="Complete Exercise"
                       onPress={handleExerciseComplete}
                       style={styles.modalButton}
-                      data-testid="button-finish-exercise"
+                      testID="button-finish-exercise"
                     />
                   )}
                 </View>
