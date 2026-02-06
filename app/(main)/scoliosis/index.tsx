@@ -17,7 +17,7 @@ interface QuickActionProps {
 
 function QuickAction({ title, subtitle, icon, color, onPress, testId }: QuickActionProps) {
   return (
-    <TouchableOpacity onPress={onPress} data-testid={testId}>
+    <TouchableOpacity style={styles.quickActionWrapper} onPress={onPress} testID={testId}>
       <Card style={styles.quickAction}>
         <View style={[styles.quickActionIcon, { backgroundColor: `${color}15` }]}>
           <Ionicons name={icon} size={24} color={color} />
@@ -316,10 +316,12 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 16,
+    gap: 12,
+  },
+  quickActionWrapper: {
+    width: '47%',
   },
   quickAction: {
-    width: '47%',
     padding: 16,
     alignItems: 'center',
   },

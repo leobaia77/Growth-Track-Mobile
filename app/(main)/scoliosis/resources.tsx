@@ -1,4 +1,5 @@
 import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/ui';
 
@@ -9,6 +10,8 @@ interface ResourceItem {
   category: string;
   icon: keyof typeof Ionicons.glyphMap;
   color: string;
+  content: string[];
+  externalUrl: string;
 }
 
 const RESOURCES: ResourceItem[] = [
@@ -19,6 +22,13 @@ const RESOURCES: ResourceItem[] = [
     category: 'Education',
     icon: 'school-outline',
     color: '#3B82F6',
+    content: [
+      'Scoliosis is a sideways curvature of the spine that most often occurs during the growth spurt just before puberty.',
+      'There are three main types: Idiopathic (most common, cause unknown), Congenital (present at birth), and Neuromuscular (caused by nerve or muscle conditions).',
+      'Curves are measured in degrees using the Cobb angle method on X-rays. Curves under 25 degrees are typically monitored, 25-45 degrees may require bracing, and over 45 degrees may need surgery.',
+      'Most mild cases do not cause pain and can be effectively managed with observation and physical therapy.',
+    ],
+    externalUrl: 'https://www.srs.org/patients-and-families/conditions-and-treatments/parents/scoliosis',
   },
   {
     id: '2',
@@ -27,6 +37,14 @@ const RESOURCES: ResourceItem[] = [
     category: 'Treatment',
     icon: 'body-outline',
     color: '#10B981',
+    content: [
+      'Wear your brace for the number of hours prescribed by your doctor, typically 16-23 hours per day.',
+      'Always wear a thin, seamless cotton shirt underneath to protect your skin and absorb moisture.',
+      'Break in your brace gradually over the first 1-2 weeks, adding a few hours each day.',
+      'Check daily for any red spots or skin irritation, especially around pressure points. Report persistent redness to your orthotist.',
+      'Keep your brace clean by wiping the inside with rubbing alcohol and letting it air dry daily.',
+    ],
+    externalUrl: 'https://www.srs.org/patients-and-families/conditions-and-treatments/parents/scoliosis/bracing',
   },
   {
     id: '3',
@@ -35,6 +53,14 @@ const RESOURCES: ResourceItem[] = [
     category: 'Exercises',
     icon: 'fitness-outline',
     color: '#8B5CF6',
+    content: [
+      'Schroth exercises are the gold standard for scoliosis-specific physical therapy, focusing on elongation, de-rotation, and corrective breathing.',
+      'Core stabilization exercises help support the spine and maintain posture throughout the day.',
+      'Stretching exercises target tight muscles on the concave side of the curve to improve flexibility and reduce discomfort.',
+      'Always perform exercises with proper form as taught by your PT. Incorrect form can be counterproductive.',
+      'Aim for consistency - doing your exercises regularly (even shorter sessions) is better than occasional long sessions.',
+    ],
+    externalUrl: 'https://www.scoliosis.org/resources/medicalupdates/exercises.php',
   },
   {
     id: '4',
@@ -43,6 +69,14 @@ const RESOURCES: ResourceItem[] = [
     category: 'Wellness',
     icon: 'heart-outline',
     color: '#EC4899',
+    content: [
+      'Apply heat or ice to sore areas for 15-20 minutes. Heat works well for muscle tightness, while ice is better for inflammation.',
+      'Practice good posture throughout the day - sit with your back supported and feet flat on the floor.',
+      'Use a supportive mattress and pillow. Sleeping on your back with a pillow under your knees can reduce strain.',
+      'Gentle movement and stretching often provides more relief than rest alone. Avoid prolonged sitting or standing.',
+      'Deep breathing exercises can help relax tense muscles and reduce pain perception.',
+    ],
+    externalUrl: 'https://www.spine-health.com/conditions/scoliosis/scoliosis-pain-management',
   },
   {
     id: '5',
@@ -51,6 +85,14 @@ const RESOURCES: ResourceItem[] = [
     category: 'Lifestyle',
     icon: 'basketball-outline',
     color: '#F59E0B',
+    content: [
+      'Most sports and physical activities are safe and encouraged for people with scoliosis.',
+      'Swimming is especially beneficial as it strengthens back muscles without compressing the spine.',
+      'Yoga and Pilates can improve flexibility, core strength, and body awareness.',
+      'High-impact sports like football or gymnastics may need modifications. Talk to your doctor about any specific restrictions.',
+      'Stay active and participate in activities you enjoy. Exercise improves physical fitness and mental well-being.',
+    ],
+    externalUrl: 'https://www.srs.org/patients-and-families/conditions-and-treatments/parents/scoliosis/living-with-scoliosis',
   },
   {
     id: '6',
@@ -59,6 +101,14 @@ const RESOURCES: ResourceItem[] = [
     category: 'Support',
     icon: 'chatbubble-ellipses-outline',
     color: '#6366F1',
+    content: [
+      'It is completely normal to feel frustrated, self-conscious, or anxious about your diagnosis. These feelings are valid.',
+      'Talking to friends, family, or a counselor about your feelings can make a big difference.',
+      'Connecting with others who have scoliosis (online groups, local support groups) can help you feel less alone.',
+      'Focus on what you can control: doing your exercises, wearing your brace as prescribed, and staying active.',
+      'Celebrate small wins in your treatment journey. Progress takes time, and every effort counts.',
+    ],
+    externalUrl: 'https://www.nssf.org/resources/',
   },
 ];
 
@@ -81,6 +131,63 @@ const FAQ_ITEMS = [
   },
 ];
 
+function ResourceCard({ resource }: { resource: ResourceItem }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const handleOpenLink = () => {
+    Linking.openURL(resource.externalUrl).catch(() => {});
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={() => setExpanded(!expanded)}
+      activeOpacity={0.7}
+      testID={`resource-${resource.id}`}
+    >
+      <Card style={styles.resourceCard}>
+        <View style={styles.resourceRow}>
+          <View style={[styles.resourceIcon, { backgroundColor: `${resource.color}15` }]}>
+            <Ionicons name={resource.icon} size={24} color={resource.color} />
+          </View>
+          <View style={styles.resourceContent}>
+            <Text style={[styles.resourceCategory, { color: resource.color }]}>
+              {resource.category.toUpperCase()}
+            </Text>
+            <Text style={styles.resourceTitle}>{resource.title}</Text>
+            <Text style={styles.resourceDescription}>{resource.description}</Text>
+          </View>
+          <Ionicons
+            name={expanded ? 'chevron-down' : 'chevron-forward'}
+            size={20}
+            color="#94A3B8"
+          />
+        </View>
+        {expanded ? (
+          <View style={styles.expandedContent}>
+            <View style={[styles.expandedDivider, { backgroundColor: `${resource.color}30` }]} />
+            {resource.content.map((item, idx) => (
+              <View key={idx} style={styles.contentItem}>
+                <View style={[styles.contentBullet, { backgroundColor: resource.color }]} />
+                <Text style={styles.contentText}>{item}</Text>
+              </View>
+            ))}
+            <TouchableOpacity
+              style={[styles.learnMoreButton, { backgroundColor: `${resource.color}15` }]}
+              onPress={handleOpenLink}
+              testID={`link-resource-${resource.id}`}
+            >
+              <Text style={[styles.learnMoreText, { color: resource.color }]}>
+                Learn More Online
+              </Text>
+              <Ionicons name="open-outline" size={16} color={resource.color} />
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </Card>
+    </TouchableOpacity>
+  );
+}
+
 export default function ResourcesScreen() {
   return (
     <SafeAreaView style={styles.safe}>
@@ -92,23 +199,7 @@ export default function ResourcesScreen() {
 
         <Text style={styles.sectionTitle}>Learning Center</Text>
         {RESOURCES.map((resource) => (
-          <TouchableOpacity key={resource.id} data-testid={`resource-${resource.id}`}>
-            <Card style={styles.resourceCard}>
-              <View style={[styles.resourceIcon, { backgroundColor: `${resource.color}15` }]}>
-                <Ionicons name={resource.icon} size={24} color={resource.color} />
-              </View>
-              <View style={styles.resourceContent}>
-                <View style={styles.resourceHeader}>
-                  <Text style={[styles.resourceCategory, { color: resource.color }]}>
-                    {resource.category}
-                  </Text>
-                </View>
-                <Text style={styles.resourceTitle}>{resource.title}</Text>
-                <Text style={styles.resourceDescription}>{resource.description}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-            </Card>
-          </TouchableOpacity>
+          <ResourceCard key={resource.id} resource={resource} />
         ))}
 
         <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
@@ -191,10 +282,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   resourceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     padding: 16,
     marginBottom: 12,
+  },
+  resourceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   resourceIcon: {
     width: 48,
@@ -207,14 +300,11 @@ const styles = StyleSheet.create({
   resourceContent: {
     flex: 1,
   },
-  resourceHeader: {
-    marginBottom: 4,
-  },
   resourceCategory: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
+    fontSize: 11,
+    fontWeight: '700',
     letterSpacing: 0.5,
+    marginBottom: 4,
   },
   resourceTitle: {
     fontSize: 16,
@@ -226,6 +316,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     lineHeight: 20,
+  },
+  expandedContent: {
+    marginTop: 12,
+  },
+  expandedDivider: {
+    height: 1,
+    marginBottom: 12,
+  },
+  contentItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+    paddingRight: 8,
+  },
+  contentBullet: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginTop: 7,
+    marginRight: 12,
+    flexShrink: 0,
+  },
+  contentText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 21,
+  },
+  learnMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  learnMoreText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
   faqCard: {
     padding: 20,
