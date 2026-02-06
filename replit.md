@@ -10,6 +10,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Final bug & security audit (Feb 2026)** - Comprehensive audit with fixes:
+  - Fixed 7 stale navigation routes: All logging screen home buttons now go to /(main)/home instead of deprecated /(tabs)
+  - Fixed admin dashboard back button routing from /(tabs)/profile to /(main)/home
+  - Fixed non-functional "Change Password" button in account settings (now navigates to forgot-password screen)
+  - Removed non-functional "Change Photo" button from account settings
+  - Replaced all Alert.alert usage with ConfirmDialog modals in account.tsx and data-export.tsx for cross-platform compatibility
+  - Removed 5 console.log debug statements from onboarding screens and instructions
+  - Also fixed && pattern in data-export.tsx radio buttons to use ternary for React Native safety
+  - Verified: No security issues (no exposed secrets/credentials), no data-testid remaining, no dangerous && JSX patterns, all navigation routes resolve to existing files
 - **Phase 5: Social features (Feb 2026)** - Repurposed Plan tab as Social tab with:
   - Achievement badges (8 milestones: streaks, sleep master, iron will, nutrition pro, PT champion, mindful warrior, early bird)
   - Native share integration for achievements and weekly summaries via React Native Share API
