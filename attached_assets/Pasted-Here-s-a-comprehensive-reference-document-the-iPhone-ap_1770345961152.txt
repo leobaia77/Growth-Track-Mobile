@@ -1,0 +1,249 @@
+Here's a comprehensive reference document the iPhone app needs to correctly connect to and use the backend API. I'll include everything: endpoints, methods, request/response shapes, field name mappings, auth flow, and key behaviors.
+
+GrowthTrack Backend API — Mobile App Integration Reference
+Base URL
+https://your-published-backend.replit.app
+Set as EXPO_PUBLIC_API_URL in the mobile app's .env file.
+
+Authentication
+All authenticated endpoints require:
+
+Authorization: Bearer <jwt_token>
+The token is received from login/register and should be stored in expo-secure-store.
+
+When the backend returns 401, the app should clear the stored token and redirect to the login screen.
+
+User Roles
+Only two roles exist:
+
+"user" — standard users (default on registration)
+"admin" — administrators
+1. AUTH ENDPOINTS
+POST /api/auth/register
+// Request
+{
+  "email": "user@example.com",
+  "password": "securepass",
+  "displayName": "Jane"
+}
+// Response
+{
+  "token": "jwt_string",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "role": "user",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  },
+  "profile": {
+    "id": "uuid",
+    "userId": "uuid",
+    "displayName": "Jane",
+    "ageRange": null,
+    "timezone": "America/New_York",
+    "pushToken": null
+  },
+  "userProfile": {
+    "id": "uuid",           // THIS is the "teenProfileId" used in all health logs
+    "profileId": "uuid",
+    "goals": [],
+    "goalWeights": {},
+    "sports": [],
+    "weeklyAvailability": {},
+    "hasScoliosisSupport": false
+  }
+}
+POST /api/auth/login
+// Request
+{ "email": "user@example.com", "password": "securepass" }
+// Response
+{
+  "token": "jwt_string",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "role": "user",
+    "createdAt": "timestamp",
+    "updatedAt": "timestamp"
+  }
+}
+GET /api/auth/me (auth required)
+// Response
+{
+  "user": { "id", "email", "role", "createdAt", "updatedAt" },
+  "profile": { "id", "userId", "displayName", "ageRange", "timezone", "pushToken" },
+  "userProfile": { "id", "profileId", "goals", "goalWeights", "sports", "weeklyAvailability", "hasScoliosisSupport" }
+}
+Note: onboardingComplete, securityWord, verify-security-word, and reset-password endpoints do NOT exist yet. These are gaps that need to be built.
+
+2. PROFILE ENDPOINTS
+GET /api/profile (auth required)
+Returns the user's profile object.
+
+PUT /api/profile (auth required)
+Accepts partial profile updates:
+
+{ "ageRange": "13-14" }
+// or
+{ "displayName": "New Name", "timezone": "America/Chicago" }
+Note: /api/user-profile does NOT exist yet as a separate endpoint. Currently only /api/profile exists.
+
+PUT /api/goals (auth required)
+{ "goals": ["sleep", "nutrition"], "goalWeights": { "sleep": 5, "nutrition": 3 } }
+3. HEALTH LOGGING ENDPOINTS
+Important Query Param Note: The backend currently reads start_date and end_date (underscore format). If the mobile app sends startDate/endDate (camelCase), they won't be recognized. This is a known gap.
+
+Daily Check-ins
+POST /api/checkin (auth required)
+
+{
+  "date": "2025-06-15",
+  "energyLevel": 7,        // 1-10
+  "sorenessLevel": 3,      // 1-10
+  "moodLevel": 8,          // 1-10
+  "stressLevel": 4,        // 1-10
+  "hasPainFlag": false,     // NOTE: backend uses "hasPainFlag", not "painFlag"
+  "painNotes": null
+}
+GET /api/checkins (auth required)
+
+Query: ?start_date=2025-06-01&end_date=2025-06-30
+Returns: array of check-in objects
+Path is plural /api/checkins — not /api/checkin
+Sleep
+POST /api/sleep (auth required)
+
+{
+  "date": "2025-06-15",
+  "totalHours": "8.5",     // decimal as string
+  "source": "manual",      // "manual" | "apple_health" | "other"
+  "bedtime": "2025-06-14T22:30:00Z",    // full ISO timestamp
+  "wakeTime": "2025-06-15T07:00:00Z"
+}
+Missing fields: sleepQuality, nightWakeups, disturbances are NOT in the schema yet.
+
+GET /api/sleep (auth required)
+
+Query: ?start_date=2025-06-01&end_date=2025-06-30
+Workouts
+POST /api/workout (auth required)
+
+{
+  "date": "2025-06-15",
+  "workoutType": "gym",    // "sport_practice" | "gym" | "pt_rehab" | "mobility" | "cardio" | "other"
+  "durationMinutes": 60,
+  "rpe": 7,                // 1-10, optional
+  "notes": "Felt strong",
+  "source": "manual"
+}
+Missing field: exercises array (individual exercise details) is NOT in the schema yet.
+
+GET /api/workouts (auth required) — plural path
+
+Query: ?start_date=2025-06-01&end_date=2025-06-30
+Nutrition
+POST /api/nutrition (auth required)
+
+{
+  "date": "2025-06-15",
+  "mealType": "lunch",     // "breakfast" | "lunch" | "dinner" | "snack"
+  "calories": 650,
+  "proteinG": 35.5,        // NOTE: backend field is "proteinG", not "protein"
+  "carbsG": 80.0,          // NOTE: backend field is "carbsG", not "carbs"
+  "fatG": 20.0,            // NOTE: backend field is "fatG", not "fat"
+  "notes": "Grilled chicken salad",
+  "source": "manual"
+}
+Key field name mapping: The mobile app may use protein/carbs/fat but the backend stores proteinG/carbsG/fatG. There is no description field — use notes instead.
+
+GET /api/nutrition (auth required)
+
+Query: ?start_date=2025-06-01&end_date=2025-06-30
+Mental Health
+NOT IMPLEMENTED — No /api/mental-health endpoint or mentalHealthLogs table exists.
+
+4. SCOLIOSIS CARE ENDPOINTS
+Important path note: All scoliosis-related endpoints live under /api/scoliosis/* on the backend.
+
+Status & Enable
+GET /api/scoliosis/status — returns scoliosis support status
+POST /api/scoliosis/enable — enables scoliosis support
+PT Exercises
+GET /api/scoliosis/exercises — list all available exercises
+PT Routines
+Mobile Might Expect	Actual Backend Path
+GET /api/pt-routines	GET /api/pt-routines (exists) AND /api/scoliosis/routines
+POST /api/pt-routines	POST /api/pt-routine (singular!) AND /api/scoliosis/routines
+PUT /api/pt-routines/:id	Only PATCH /api/scoliosis/brace-schedule/:id exists for brace
+PT Adherence
+GET /api/pt-adherence — query: ?start_date=&end_date=
+POST /api/pt-adherence — log completed session
+{
+  "routineId": "uuid",
+  "date": "2025-06-15",
+  "completed": true,
+  "exercisesCompleted": ["exercise-uuid-1", "exercise-uuid-2"],
+  "notes": "Felt good"
+}
+Missing fields: difficultyRating, painLevel, cobbAngle, lastMeasuredDate, backFeeling are NOT in the schema yet.
+
+Brace Tracking
+Mobile Expects	Actual Backend Path
+GET /api/brace-schedules	GET /api/scoliosis/brace-schedule
+POST /api/brace-schedules	POST /api/scoliosis/brace-schedule
+PUT /api/brace-schedules/:id	PATCH /api/scoliosis/brace-schedule/:id (PATCH not PUT)
+GET /api/brace-logs	GET /api/scoliosis/brace-logs
+GET /api/brace-logs/active	GET /api/scoliosis/brace-logs/active
+POST /api/brace-logs/start	POST /api/scoliosis/brace-logs/start
+POST /api/brace-logs/:id/end	POST /api/scoliosis/brace-logs/:id/end
+Symptom Logging
+Mobile Expects	Actual Backend Path
+GET /api/scoliosis-symptoms	GET /api/scoliosis/symptoms
+POST /api/scoliosis-symptoms	POST /api/scoliosis/symptoms
+5. SAFETY ALERTS
+GET /api/safety-alerts (auth required) — returns user's alerts
+PUT /api/safety-alerts/:id/acknowledge (auth required) — acknowledge an alert
+POST /api/safety-check (auth required) — trigger a manual safety check
+6. RECOMMENDATIONS & INSIGHTS
+GET /api/recommendations (auth required) — AI-generated recommendations, optional ?date=
+GET /api/morning-brief (auth required) — daily summary, optional ?date=
+POST /api/recommendations/actions/complete (auth required)
+{ "actionId": "string", "completed": true }
+7. DATA MANAGEMENT
+GET /api/export-data?format=json or ?format=csv (auth required) — download user data
+DELETE /api/account (auth required) — body: { "confirmEmail": "user@email.com" }
+POST /api/data-export/email — NOT IMPLEMENTED
+8. HEALTHKIT SYNC
+POST /api/health-sync (auth required)
+
+{
+  "sleep": [{ "date": "2025-06-15", "totalHours": 7.5, "bedtime": "...", "wakeTime": "..." }],
+  "workouts": [{ "date": "2025-06-15", "type": "gym", "durationMinutes": 45, "calories": 300 }],
+  "activity": [{ "date": "2025-06-15", "steps": 8500, "activeCalories": 250 }],
+  "nutrition": [{ "date": "2025-06-15", "calories": 2100, "protein": 95 }]
+}
+9. OTHER
+POST /api/push-token (auth required) — store Expo push notification token
+{ "pushToken": "ExponentPushToken[xxx]" }
+CRITICAL FIELD NAME MAPPINGS
+What Mobile App Uses	What Backend Stores	Notes
+painFlag	hasPainFlag	Boolean field on check-ins
+protein	proteinG	Nutrition decimal
+carbs	carbsG	Nutrition decimal
+fat	fatG	Nutrition decimal
+description (nutrition)	notes	Use notes field
+teenId / userProfileId	teenProfileId	Health tracking profile UUID
+startDate (query param)	start_date	Underscore format on backend
+endDate (query param)	end_date	Underscore format on backend
+SUMMARY OF GAPS (What Needs Building)
+onboardingComplete field on users table + include in auth responses
+securityWord field + verify/reset-password endpoints
+/api/user-profile alias endpoints
+/api/mental-health + mentalHealthLogs table
+/api/data-export/email endpoint
+Enhanced sleep fields: sleepQuality, nightWakeups, disturbances
+Enhanced workout fields: exercises array
+Enhanced PT adherence fields: difficultyRating, painLevel, cobbAngle, etc.
+Path aliases for brace/symptom endpoints at non-scoliosis-prefixed paths
+Query param compatibility for startDate/endDate (camelCase)
