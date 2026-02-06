@@ -21,6 +21,14 @@ const MOCK_ROUTINE: Exercise[] = [
   { id: '4', name: 'Band Walks', sets: 3, duration: 30, completed: false },
 ];
 
+const FEELING_OPTIONS: { key: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'great', label: 'Great', icon: 'happy-outline' },
+  { key: 'good', label: 'Good', icon: 'thumbs-up-outline' },
+  { key: 'ok', label: 'OK', icon: 'remove-circle-outline' },
+  { key: 'uncomfortable', label: 'Uncomfortable', icon: 'alert-circle-outline' },
+  { key: 'painful', label: 'Painful', icon: 'warning-outline' },
+];
+
 export default function PTLogScreen() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -34,9 +42,12 @@ export default function PTLogScreen() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentSet, setCurrentSet] = useState(1);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [cobbAngle, setCobbAngle] = useState('');
+  const [lastMeasuredDate, setLastMeasuredDate] = useState('');
+  const [backFeeling, setBackFeeling] = useState<string>('');
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const hasProgress = exercises.some(e => e.completed) || notes !== '';
+  const hasProgress = exercises.some(e => e.completed) || notes !== '' || cobbAngle !== '' || backFeeling !== '';
 
   useEffect(() => {
     return () => {
@@ -108,6 +119,9 @@ export default function PTLogScreen() {
         braceMinutes: braceMinutes ? parseInt(braceMinutes, 10) : 0,
         notes,
         exercises: exercises.map(e => ({ name: e.name, completed: e.completed })),
+        cobbAngle: cobbAngle ? parseFloat(cobbAngle) : undefined,
+        lastMeasuredDate: lastMeasuredDate || undefined,
+        backFeeling: backFeeling || undefined,
       },
       {
         onSuccess: () => {
@@ -218,6 +232,65 @@ export default function PTLogScreen() {
           </Card>
         </View>
 
+        <View style={styles.curvatureSection}>
+          <Text style={styles.sectionTitle}>Curvature Check-in</Text>
+
+          <Card style={styles.infoCard}>
+            <View style={styles.infoCardContent}>
+              <Ionicons name="information-circle" size={20} color="#3B82F6" />
+              <Text style={styles.infoCardText}>
+                Track your Cobb angle measurements from X-rays. Your PT or doctor will provide this measurement.
+              </Text>
+            </View>
+          </Card>
+
+          <Card style={styles.curvatureCard}>
+            <Input
+              label="Cobb Angle (degrees)"
+              placeholder="e.g., 25"
+              value={cobbAngle}
+              onChangeText={setCobbAngle}
+              keyboardType="numeric"
+              testID="input-cobb-angle"
+            />
+
+            <Input
+              label="Last Measured"
+              placeholder="e.g., 2026-02-01"
+              value={lastMeasuredDate}
+              onChangeText={setLastMeasuredDate}
+              testID="input-last-measured"
+            />
+
+            <Text style={styles.feelingLabel}>How does your back feel?</Text>
+            <View style={styles.feelingRow}>
+              {FEELING_OPTIONS.map((option) => (
+                <TouchableOpacity
+                  key={option.key}
+                  style={[
+                    styles.feelingOption,
+                    backFeeling === option.key ? styles.feelingOptionActive : null,
+                  ]}
+                  onPress={() => setBackFeeling(backFeeling === option.key ? '' : option.key)}
+                  testID={`button-feeling-${option.key}`}
+                >
+                  <Ionicons
+                    name={option.icon}
+                    size={22}
+                    color={backFeeling === option.key ? '#FFFFFF' : '#64748B'}
+                  />
+                  <Text style={[
+                    styles.feelingOptionText,
+                    backFeeling === option.key ? styles.feelingOptionTextActive : null,
+                  ]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </Card>
+        </View>
+
         <Input
           label="Notes (optional)"
           placeholder="How did it feel? Any pain or discomfort?"
@@ -305,14 +378,14 @@ export default function PTLogScreen() {
               </TouchableOpacity>
             </View>
 
-            {currentSet >= (activeExercise?.sets || 0) && timeRemaining === 0 && (
+            {currentSet >= (activeExercise?.sets || 0) && timeRemaining === 0 ? (
               <Button
                 title="Done - Mark Complete"
                 onPress={finishExercise}
                 style={styles.finishButton}
                 testID="button-finish-exercise"
               />
-            )}
+            ) : null}
           </View>
         </View>
       </Modal>
@@ -440,6 +513,63 @@ const styles = StyleSheet.create({
   braceUnit: {
     fontSize: 14,
     color: '#64748B',
+  },
+  curvatureSection: {
+    marginBottom: 8,
+  },
+  infoCard: {
+    marginBottom: 12,
+    backgroundColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+  },
+  infoCardContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  infoCardText: {
+    fontSize: 13,
+    color: '#1E40AF',
+    flex: 1,
+    lineHeight: 19,
+  },
+  curvatureCard: {
+    marginBottom: 16,
+  },
+  feelingLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 10,
+  },
+  feelingRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  feelingOption: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    minWidth: 58,
+    gap: 4,
+  },
+  feelingOptionActive: {
+    borderColor: '#10B981',
+    backgroundColor: '#10B981',
+  },
+  feelingOptionText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  feelingOptionTextActive: {
+    color: '#FFFFFF',
   },
   footer: {
     padding: 24,

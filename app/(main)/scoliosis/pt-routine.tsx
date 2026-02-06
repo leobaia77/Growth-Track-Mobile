@@ -5,6 +5,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card, Button } from '@/components/ui';
 import { usePtRoutines, useLogPtAdherence } from '@/hooks/useApi';
 
+interface ExerciseFeedback {
+  difficulty: number;
+  painLevel: 'none' | 'mild' | 'significant';
+}
+
 interface Exercise {
   id: string;
   name: string;
@@ -13,7 +18,9 @@ interface Exercise {
   repetitions?: number;
   sets?: number;
   instructions?: string[];
+  targetArea?: string;
   completed: boolean;
+  feedback?: ExerciseFeedback;
 }
 
 interface Routine {
@@ -23,11 +30,90 @@ interface Routine {
 }
 
 const DEFAULT_EXERCISES: Exercise[] = [
-  { id: '1', name: 'Cat-Cow Stretch', sets: 1, durationSeconds: 60, completed: false },
-  { id: '2', name: 'Child\'s Pose', sets: 1, durationSeconds: 45, completed: false },
-  { id: '3', name: 'Pelvic Tilt', sets: 3, repetitions: 10, durationSeconds: 30, completed: false },
-  { id: '4', name: 'Side Stretch', sets: 2, durationSeconds: 30, completed: false },
-  { id: '5', name: 'Core Breathing', sets: 1, durationSeconds: 90, completed: false },
+  {
+    id: '1',
+    name: 'Cat-Cow Stretch',
+    sets: 1,
+    durationSeconds: 60,
+    completed: false,
+    description: 'Alternate between arching your back (cow) and rounding it (cat) while on hands and knees.',
+    instructions: [
+      'Start on hands and knees with wrists under shoulders',
+      'Inhale: Drop belly, lift head and tailbone (cow)',
+      'Exhale: Round spine, tuck chin and tailbone (cat)',
+      'Move slowly and smoothly between positions',
+    ],
+    targetArea: 'Spine Mobility',
+  },
+  {
+    id: '2',
+    name: "Child's Pose",
+    sets: 1,
+    durationSeconds: 45,
+    completed: false,
+    description: 'A gentle resting stretch that elongates the spine and relieves tension.',
+    instructions: [
+      'Kneel on the floor, big toes together',
+      'Sit back on your heels',
+      'Fold forward, reaching arms out in front',
+      'Rest forehead on the floor and breathe deeply',
+    ],
+    targetArea: 'Back & Hips',
+  },
+  {
+    id: '3',
+    name: 'Pelvic Tilt',
+    sets: 3,
+    repetitions: 10,
+    durationSeconds: 30,
+    completed: false,
+    description: 'Engages deep core muscles to stabilize the pelvis and lower back.',
+    instructions: [
+      'Lie on your back with knees bent, feet flat',
+      'Flatten your lower back against the floor',
+      'Tighten your abs and hold for 3-5 seconds',
+      'Release and repeat',
+    ],
+    targetArea: 'Core & Pelvis',
+  },
+  {
+    id: '4',
+    name: 'Side Stretch',
+    sets: 2,
+    durationSeconds: 30,
+    completed: false,
+    description: 'Stretches the concave side of the spinal curve to promote balance.',
+    instructions: [
+      'Stand tall with feet hip-width apart',
+      'Raise one arm overhead',
+      'Lean gently to the opposite side',
+      'Hold the stretch, breathing deeply',
+    ],
+    targetArea: 'Lateral Spine',
+  },
+  {
+    id: '5',
+    name: 'Core Breathing',
+    sets: 1,
+    durationSeconds: 90,
+    completed: false,
+    description: 'Diaphragmatic breathing that strengthens core stability and promotes spinal alignment.',
+    instructions: [
+      'Lie on your back with knees bent',
+      'Place one hand on chest, one on belly',
+      'Breathe in through nose - belly should rise',
+      'Exhale slowly through mouth - belly falls',
+      'Keep chest relatively still throughout',
+    ],
+    targetArea: 'Core & Breathing',
+  },
+];
+
+const DIFFICULTY_LABELS = ['Easy', '', 'Medium', '', 'Hard'];
+const PAIN_OPTIONS: { key: 'none' | 'mild' | 'significant'; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { key: 'none', label: 'None', icon: 'happy-outline' },
+  { key: 'mild', label: 'Mild', icon: 'alert-circle-outline' },
+  { key: 'significant', label: 'Significant', icon: 'warning-outline' },
 ];
 
 export default function PTRoutineScreen() {
@@ -42,6 +128,11 @@ export default function PTRoutineScreen() {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [currentSet, setCurrentSet] = useState(1);
   const [sessionStartTime, setSessionStartTime] = useState<Date | null>(null);
+  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackDifficulty, setFeedbackDifficulty] = useState(0);
+  const [feedbackPain, setFeedbackPain] = useState<'none' | 'mild' | 'significant' | ''>('');
+  const [showInstructions, setShowInstructions] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -69,6 +160,10 @@ export default function PTRoutineScreen() {
     setCurrentSet(1);
     setTimerModalVisible(true);
     setIsTimerRunning(false);
+    setShowFeedback(false);
+    setFeedbackDifficulty(0);
+    setFeedbackPain('');
+    setShowInstructions(true);
   };
 
   const toggleTimer = () => {
@@ -76,6 +171,7 @@ export default function PTRoutineScreen() {
       if (intervalRef.current) clearInterval(intervalRef.current);
       setIsTimerRunning(false);
     } else {
+      setShowInstructions(false);
       setIsTimerRunning(true);
       intervalRef.current = setInterval(() => {
         setTimeRemaining((prev) => {
@@ -96,6 +192,28 @@ export default function PTRoutineScreen() {
       setTimeRemaining(activeExercise.durationSeconds || 30);
       setIsTimerRunning(false);
     }
+  };
+
+  const handleExerciseComplete = () => {
+    setShowFeedback(true);
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    setIsTimerRunning(false);
+  };
+
+  const submitFeedback = () => {
+    if (activeExercise) {
+      const feedback: ExerciseFeedback = {
+        difficulty: feedbackDifficulty > 0 ? feedbackDifficulty : 3,
+        painLevel: feedbackPain || 'none',
+      };
+      setExercises(exercises.map(e =>
+        e.id === activeExercise.id ? { ...e, completed: true, feedback } : e
+      ));
+    }
+    setTimerModalVisible(false);
+    setActiveExercise(null);
+    setIsTimerRunning(false);
+    setShowFeedback(false);
   };
 
   const finishExercise = () => {
@@ -138,6 +256,14 @@ export default function PTRoutineScreen() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const toggleExerciseInfo = (exerciseId: string) => {
+    setExpandedExerciseId(expandedExerciseId === exerciseId ? null : exerciseId);
+  };
+
+  const allSetsComplete = activeExercise
+    ? currentSet >= (activeExercise.sets || 1) && timeRemaining === 0
+    : false;
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
@@ -173,20 +299,73 @@ export default function PTRoutineScreen() {
                   )}
                 </View>
                 <View style={styles.exerciseInfo}>
-                  <Text style={[styles.exerciseName, exercise.completed && styles.exerciseNameCompleted]}>
-                    {exercise.name}
-                  </Text>
+                  <View style={styles.exerciseNameRow}>
+                    <Text style={[styles.exerciseName, exercise.completed && styles.exerciseNameCompleted]}>
+                      {exercise.name}
+                    </Text>
+                    {exercise.targetArea ? (
+                      <View style={styles.targetBadgeSmall}>
+                        <Text style={styles.targetBadgeSmallText}>{exercise.targetArea}</Text>
+                      </View>
+                    ) : null}
+                  </View>
                   <Text style={styles.exerciseDetails}>
-                    {exercise.sets && `${exercise.sets} sets`}
-                    {exercise.repetitions && ` \u00b7 ${exercise.repetitions} reps`}
-                    {exercise.durationSeconds && ` \u00b7 ${formatTime(exercise.durationSeconds)}`}
+                    {exercise.sets ? `${exercise.sets} sets` : ''}
+                    {exercise.repetitions ? ` \u00b7 ${exercise.repetitions} reps` : ''}
+                    {exercise.durationSeconds ? ` \u00b7 ${formatTime(exercise.durationSeconds)}` : ''}
                   </Text>
                 </View>
               </View>
-              {!exercise.completed && (
-                <Ionicons name="play-circle" size={32} color="#8B5CF6" />
-              )}
+              <View style={styles.exerciseActions}>
+                {exercise.description ? (
+                  <TouchableOpacity
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      toggleExerciseInfo(exercise.id);
+                    }}
+                    style={styles.infoButton}
+                    testID={`button-exercise-info-${exercise.id}`}
+                  >
+                    <Ionicons
+                      name={expandedExerciseId === exercise.id ? 'information-circle' : 'information-circle-outline'}
+                      size={24}
+                      color="#8B5CF6"
+                    />
+                  </TouchableOpacity>
+                ) : null}
+                {!exercise.completed ? (
+                  <Ionicons name="play-circle" size={32} color="#8B5CF6" />
+                ) : null}
+              </View>
             </TouchableOpacity>
+
+            {expandedExerciseId === exercise.id ? (
+              <View style={styles.expandedInfo}>
+                {exercise.description ? (
+                  <Text style={styles.expandedDescription} testID={`text-exercise-description-${exercise.id}`}>
+                    {exercise.description}
+                  </Text>
+                ) : null}
+                {exercise.instructions && exercise.instructions.length > 0 ? (
+                  <View style={styles.expandedInstructions}>
+                    {exercise.instructions.map((step, i) => (
+                      <View key={i} style={styles.instructionStep}>
+                        <Text style={styles.instructionNumber}>{i + 1}.</Text>
+                        <Text style={styles.instructionText}>{step}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+            ) : null}
+
+            {exercise.completed && exercise.feedback ? (
+              <View style={styles.feedbackSummary}>
+                <Text style={styles.feedbackSummaryText}>
+                  Difficulty: {exercise.feedback.difficulty}/5 | Pain: {exercise.feedback.painLevel}
+                </Text>
+              </View>
+            ) : null}
           </Card>
         ))}
 
@@ -206,49 +385,143 @@ export default function PTRoutineScreen() {
         presentationStyle="pageSheet"
       >
         <SafeAreaView style={styles.modalSafe}>
-          <View style={styles.modalContent}>
+          <ScrollView contentContainerStyle={styles.modalScrollContent}>
             <TouchableOpacity style={styles.closeButton} onPress={() => setTimerModalVisible(false)}>
               <Ionicons name="close" size={24} color="#64748B" />
             </TouchableOpacity>
 
+            {activeExercise?.targetArea ? (
+              <View style={styles.targetBadge}>
+                <Ionicons name="fitness-outline" size={14} color="#8B5CF6" />
+                <Text style={styles.targetBadgeText}>{activeExercise.targetArea}</Text>
+              </View>
+            ) : null}
+
             <Text style={styles.modalExerciseName}>{activeExercise?.name}</Text>
-            {activeExercise?.sets && activeExercise.sets > 1 && (
+
+            {activeExercise?.description ? (
+              <Text style={styles.modalDescription}>{activeExercise.description}</Text>
+            ) : null}
+
+            {activeExercise?.sets && activeExercise.sets > 1 ? (
               <Text style={styles.modalSetLabel}>Set {currentSet} of {activeExercise.sets}</Text>
+            ) : null}
+
+            {showInstructions && activeExercise?.instructions && activeExercise.instructions.length > 0 && !showFeedback ? (
+              <Card style={styles.instructionsCard}>
+                <Text style={styles.instructionsTitle}>Instructions</Text>
+                {activeExercise.instructions.map((step, i) => (
+                  <View key={i} style={styles.modalInstructionStep}>
+                    <View style={styles.stepNumber}>
+                      <Text style={styles.stepNumberText}>{i + 1}</Text>
+                    </View>
+                    <Text style={styles.modalInstructionText}>{step}</Text>
+                  </View>
+                ))}
+              </Card>
+            ) : null}
+
+            {!showFeedback ? (
+              <>
+                <View style={styles.timerRing}>
+                  <Text style={styles.timerDisplay}>{formatTime(timeRemaining)}</Text>
+                </View>
+
+                <View style={styles.timerControls}>
+                  <TouchableOpacity
+                    style={[styles.timerButton, isTimerRunning && styles.pauseButton]}
+                    onPress={toggleTimer}
+                    data-testid="button-timer-toggle"
+                  >
+                    <Ionicons name={isTimerRunning ? 'pause' : 'play'} size={32} color="#FFFFFF" />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.modalActions}>
+                  {activeExercise?.sets && currentSet < activeExercise.sets ? (
+                    <Button
+                      title="Next Set"
+                      onPress={nextSet}
+                      disabled={timeRemaining > 0}
+                      style={styles.modalButton}
+                      data-testid="button-next-set"
+                    />
+                  ) : (
+                    <Button
+                      title="Complete Exercise"
+                      onPress={handleExerciseComplete}
+                      style={styles.modalButton}
+                      data-testid="button-finish-exercise"
+                    />
+                  )}
+                </View>
+              </>
+            ) : (
+              <View style={styles.feedbackContainer}>
+                <Text style={styles.feedbackTitle}>How hard was that?</Text>
+                <View style={styles.difficultyRow}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      style={[
+                        styles.difficultyCircle,
+                        feedbackDifficulty === n ? styles.difficultyCircleActive : null,
+                      ]}
+                      onPress={() => setFeedbackDifficulty(n)}
+                      testID={`button-difficulty-${n}`}
+                    >
+                      <Text style={[
+                        styles.difficultyNumber,
+                        feedbackDifficulty === n ? styles.difficultyNumberActive : null,
+                      ]}>
+                        {n}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={styles.difficultyLabels}>
+                  <Text style={styles.difficultyLabelText}>Easy</Text>
+                  <Text style={styles.difficultyLabelText}>Hard</Text>
+                </View>
+
+                <Text style={styles.feedbackTitle}>Any discomfort?</Text>
+                <View style={styles.painRow}>
+                  {PAIN_OPTIONS.map((option) => (
+                    <TouchableOpacity
+                      key={option.key}
+                      style={[
+                        styles.painOption,
+                        feedbackPain === option.key ? styles.painOptionActive : null,
+                      ]}
+                      onPress={() => setFeedbackPain(option.key)}
+                      testID={`button-pain-${option.key}`}
+                    >
+                      <Ionicons
+                        name={option.icon}
+                        size={24}
+                        color={feedbackPain === option.key ? '#FFFFFF' : '#64748B'}
+                      />
+                      <Text style={[
+                        styles.painOptionText,
+                        feedbackPain === option.key ? styles.painOptionTextActive : null,
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <Button
+                  title="Save & Continue"
+                  onPress={submitFeedback}
+                  style={styles.feedbackSubmitButton}
+                />
+                <TouchableOpacity onPress={finishExercise} style={styles.skipFeedback}>
+                  <Text style={styles.skipFeedbackText}>Skip feedback</Text>
+                </TouchableOpacity>
+              </View>
             )}
-
-            <View style={styles.timerRing}>
-              <Text style={styles.timerDisplay}>{formatTime(timeRemaining)}</Text>
-            </View>
-
-            <View style={styles.timerControls}>
-              <TouchableOpacity
-                style={[styles.timerButton, isTimerRunning && styles.pauseButton]}
-                onPress={toggleTimer}
-                data-testid="button-timer-toggle"
-              >
-                <Ionicons name={isTimerRunning ? 'pause' : 'play'} size={32} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalActions}>
-              {activeExercise?.sets && currentSet < activeExercise.sets ? (
-                <Button
-                  title="Next Set"
-                  onPress={nextSet}
-                  disabled={timeRemaining > 0}
-                  style={styles.modalButton}
-                  data-testid="button-next-set"
-                />
-              ) : (
-                <Button
-                  title="Complete Exercise"
-                  onPress={finishExercise}
-                  style={styles.modalButton}
-                  data-testid="button-finish-exercise"
-                />
-              )}
-            </View>
-          </View>
+          </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
@@ -344,6 +617,12 @@ const styles = StyleSheet.create({
   exerciseInfo: {
     flex: 1,
   },
+  exerciseNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
   exerciseName: {
     fontSize: 16,
     fontWeight: '600',
@@ -357,6 +636,67 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
   },
+  exerciseActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  infoButton: {
+    padding: 4,
+  },
+  targetBadgeSmall: {
+    backgroundColor: '#F3F0FF',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  targetBadgeSmallText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#8B5CF6',
+  },
+  expandedInfo: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  expandedDescription: {
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  expandedInstructions: {
+    gap: 6,
+  },
+  instructionStep: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  instructionNumber: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8B5CF6',
+    width: 18,
+  },
+  instructionText: {
+    fontSize: 13,
+    color: '#374151',
+    flex: 1,
+    lineHeight: 18,
+  },
+  feedbackSummary: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+  },
+  feedbackSummaryText: {
+    fontSize: 12,
+    color: '#8B5CF6',
+    fontWeight: '500',
+  },
   completeButton: {
     marginTop: 24,
     backgroundColor: '#8B5CF6',
@@ -368,17 +708,33 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  modalContent: {
-    flex: 1,
+  modalScrollContent: {
+    flexGrow: 1,
     padding: 24,
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingTop: 56,
   },
   closeButton: {
     position: 'absolute',
     top: 24,
     right: 24,
     padding: 8,
+    zIndex: 10,
+  },
+  targetBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#F3F0FF',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 12,
+  },
+  targetBadgeText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#8B5CF6',
   },
   modalExerciseName: {
     fontSize: 24,
@@ -387,10 +743,55 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'center',
   },
+  modalDescription: {
+    fontSize: 15,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 8,
+    paddingHorizontal: 16,
+  },
   modalSetLabel: {
     fontSize: 16,
     color: '#64748B',
-    marginBottom: 32,
+    marginBottom: 16,
+  },
+  instructionsCard: {
+    width: '100%',
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#FAFAFE',
+  },
+  instructionsTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
+  },
+  modalInstructionStep: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginBottom: 10,
+  },
+  stepNumber: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepNumberText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalInstructionText: {
+    fontSize: 14,
+    color: '#374151',
+    flex: 1,
+    lineHeight: 20,
   },
   timerRing: {
     width: 200,
@@ -428,5 +829,96 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     backgroundColor: '#8B5CF6',
+  },
+  feedbackContainer: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 8,
+  },
+  feedbackTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  difficultyRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  difficultyCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  difficultyCircleActive: {
+    borderColor: '#8B5CF6',
+    backgroundColor: '#8B5CF6',
+  },
+  difficultyNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  difficultyNumberActive: {
+    color: '#FFFFFF',
+  },
+  difficultyLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: 276,
+    marginBottom: 28,
+  },
+  difficultyLabelText: {
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  painRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 32,
+  },
+  painOption: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    minWidth: 90,
+    gap: 6,
+  },
+  painOptionActive: {
+    borderColor: '#8B5CF6',
+    backgroundColor: '#8B5CF6',
+  },
+  painOptionText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#64748B',
+  },
+  painOptionTextActive: {
+    color: '#FFFFFF',
+  },
+  feedbackSubmitButton: {
+    backgroundColor: '#8B5CF6',
+    width: '100%',
+  },
+  skipFeedback: {
+    marginTop: 12,
+    padding: 8,
+  },
+  skipFeedbackText: {
+    fontSize: 14,
+    color: '#94A3B8',
   },
 });
