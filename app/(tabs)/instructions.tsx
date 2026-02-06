@@ -78,7 +78,7 @@ export default function InstructionsScreen() {
       try {
         await Linking.openURL(link.url);
       } catch (error) {
-        console.log('Failed to open URL:', error);
+    
       }
     }
   };

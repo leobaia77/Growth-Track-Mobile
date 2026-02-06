@@ -52,7 +52,7 @@ export default function AvailabilityScreen() {
     try {
       await updateProfile.mutateAsync({ weeklyAvailability: availability } as never);
     } catch (error) {
-      console.log('Availability update error (continuing anyway):', error);
+    
     }
     router.push('/(onboarding)/connect-health');
   };
