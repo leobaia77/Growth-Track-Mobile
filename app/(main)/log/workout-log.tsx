@@ -197,7 +197,7 @@ const WORKOUT_CATEGORIES: WorkoutCategory[] = [
     ],
   },
   {
-    id: 'water-polo',
+    id: 'water_polo',
     label: 'Water Polo',
     icon: 'football',
     color: '#8B5CF6',
@@ -292,7 +292,7 @@ const WORKOUT_CATEGORIES: WorkoutCategory[] = [
     ],
   },
   {
-    id: 'sport',
+    id: 'sport_practice',
     label: 'Sport Practice',
     icon: 'trophy',
     color: '#EC4899',

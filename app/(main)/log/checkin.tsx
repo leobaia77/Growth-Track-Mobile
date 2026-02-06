@@ -41,7 +41,7 @@ export default function CheckinScreen() {
         moodLevel: mood,
         stressLevel: stress,
         hasPainFlag: painFlag,
-        painNotes: painFlag ? painNotes : null,
+        painNotes: painFlag ? painNotes : '',
       },
       {
         onSuccess: () => {
