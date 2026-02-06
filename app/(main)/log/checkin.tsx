@@ -40,7 +40,7 @@ export default function CheckinScreen() {
         sorenessLevel: soreness,
         moodLevel: mood,
         stressLevel: stress,
-        painFlag,
+        hasPainFlag: painFlag,
         painNotes: painFlag ? painNotes : null,
       },
       {

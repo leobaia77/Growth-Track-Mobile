@@ -89,11 +89,11 @@ export default function MealLogScreen() {
   const dailyTotals = useMemo(() => {
     const totals = { calories: 0, protein: 0, carbs: 0, fat: 0 };
     if (todayLogs && todayLogs.length > 0) {
-      todayLogs.forEach((log) => {
+      todayLogs.forEach((log: any) => {
         totals.calories += log.calories || 0;
-        totals.protein += log.protein || 0;
-        totals.carbs += (log as any).carbs || 0;
-        totals.fat += (log as any).fat || 0;
+        totals.protein += log.proteinG || log.protein || 0;
+        totals.carbs += log.carbsG || log.carbs || 0;
+        totals.fat += log.fatG || log.fat || 0;
       });
     }
     return totals;
@@ -106,11 +106,11 @@ export default function MealLogScreen() {
       {
         date: new Date().toISOString().split('T')[0],
         mealType: mealType || 'snack',
-        description,
+        notes: description || null,
         calories: calories ? parseInt(calories, 10) : null,
-        protein: protein ? parseInt(protein, 10) : null,
-        carbs: carbs ? parseInt(carbs, 10) : null,
-        fat: fat ? parseInt(fat, 10) : null,
+        proteinG: protein ? parseInt(protein, 10) : null,
+        carbsG: carbs ? parseInt(carbs, 10) : null,
+        fatG: fat ? parseInt(fat, 10) : null,
         source: 'manual',
       } as any,
       {
