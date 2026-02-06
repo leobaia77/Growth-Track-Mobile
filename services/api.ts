@@ -32,6 +32,13 @@ class ApiService {
     return headers;
   }
 
+  private buildDateQuery(startDate?: string, endDate?: string): string {
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    return params.toString() ? `?${params}` : '';
+  }
+
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const { method = 'GET', body, requiresAuth = true } = options;
     
@@ -72,12 +79,13 @@ class ApiService {
   }
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/api/auth/login', {
+    const rawResponse = await this.request<any>('/api/auth/login', {
       method: 'POST',
       body: { email, password },
       requiresAuth: false,
     });
     
+    const response = this.normalizeAuthResponse(rawResponse);
     await storage.setToken(response.token);
     await storage.setUser(response.user);
     
@@ -89,16 +97,36 @@ class ApiService {
     if (securityWord) {
       body.securityWord = securityWord;
     }
-    const response = await this.request<AuthResponse>('/api/auth/register', {
+    const rawResponse = await this.request<any>('/api/auth/register', {
       method: 'POST',
       body,
       requiresAuth: false,
     });
     
+    const response = this.normalizeAuthResponse(rawResponse);
     await storage.setToken(response.token);
     await storage.setUser(response.user);
     
     return response;
+  }
+
+  private normalizeAuthResponse(raw: any): AuthResponse {
+    if (raw.user && raw.user.displayName !== undefined && raw.user.onboardingComplete !== undefined) {
+      return raw as AuthResponse;
+    }
+
+    const user: any = {
+      id: raw.user?.id,
+      email: raw.user?.email,
+      role: raw.user?.role || 'user',
+      displayName: raw.profile?.displayName || raw.user?.displayName || '',
+      onboardingComplete: raw.user?.onboardingComplete ?? (raw.userProfile?.goals?.length > 0),
+    };
+
+    return {
+      token: raw.token,
+      user,
+    };
   }
 
   async verifySecurityWord(email: string, securityWord: string): Promise<{ valid: boolean }> {
@@ -122,7 +150,19 @@ class ApiService {
   }
 
   async getCurrentUser() {
-    return this.request('/api/auth/me');
+    const raw = await this.request<any>('/api/auth/me');
+    if (raw.user && raw.profile) {
+      return {
+        user: {
+          id: raw.user.id,
+          email: raw.user.email,
+          role: raw.user.role || 'user',
+          displayName: raw.profile?.displayName || raw.user?.displayName || '',
+          onboardingComplete: raw.user?.onboardingComplete ?? (raw.userProfile?.goals?.length > 0),
+        },
+      };
+    }
+    return raw;
   }
 
   async getProfile() {
@@ -134,11 +174,11 @@ class ApiService {
   }
 
   async getUserProfile() {
-    return this.request('/api/user-profile');
+    return this.request('/api/profile');
   }
 
   async updateUserProfile(data: unknown) {
-    return this.request('/api/user-profile', { method: 'PUT', body: data });
+    return this.request('/api/profile', { method: 'PUT', body: data });
   }
 
   async updateGoals(goals: unknown) {
@@ -162,10 +202,7 @@ class ApiService {
   }
 
   async getMentalHealthLogs(startDate?: string, endDate?: string) {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
+    const query = this.buildDateQuery(startDate, endDate);
     return this.request(`/api/mental-health${query}`);
   }
 
@@ -211,36 +248,36 @@ class ApiService {
   }
 
   async getBraceSchedule() {
-    return this.request('/api/brace-schedules');
+    return this.request('/api/scoliosis/brace-schedule');
   }
 
   async createBraceSchedule(data: unknown) {
-    return this.request('/api/brace-schedules', { method: 'POST', body: data });
+    return this.request('/api/scoliosis/brace-schedule', { method: 'POST', body: data });
   }
 
   async updateBraceSchedule(id: string, data: unknown) {
-    return this.request(`/api/brace-schedules/${id}`, { method: 'PUT', body: data });
+    return this.request(`/api/scoliosis/brace-schedule/${id}`, { method: 'PATCH', body: data });
   }
 
   async getBraceLogs(date?: string) {
     const query = date ? `?date=${date}` : '';
-    return this.request(`/api/brace-logs${query}`);
+    return this.request(`/api/scoliosis/brace-logs${query}`);
   }
 
   async getActiveBraceSession() {
-    return this.request('/api/brace-logs/active');
+    return this.request('/api/scoliosis/brace-logs/active');
   }
 
   async startBraceSession(notes?: string) {
-    return this.request('/api/brace-logs/start', { method: 'POST', body: { notes } });
+    return this.request('/api/scoliosis/brace-logs/start', { method: 'POST', body: { notes } });
   }
 
   async endBraceSession(id: string, notes?: string) {
-    return this.request(`/api/brace-logs/${id}/end`, { method: 'POST', body: { notes } });
+    return this.request(`/api/scoliosis/brace-logs/${id}/end`, { method: 'POST', body: { notes } });
   }
 
   async createBraceLog(data: unknown) {
-    return this.request('/api/brace-logs', { method: 'POST', body: data });
+    return this.request('/api/scoliosis/brace-logs', { method: 'POST', body: data });
   }
 
   async getPtExercises() {
@@ -252,21 +289,18 @@ class ApiService {
   }
 
   async createPtRoutine(data: unknown) {
-    return this.request('/api/pt-routines', { method: 'POST', body: data });
+    return this.request('/api/scoliosis/routines', { method: 'POST', body: data });
   }
 
   async updatePtRoutine(id: string, data: unknown) {
-    return this.request(`/api/pt-routines/${id}`, { method: 'PUT', body: data });
+    return this.request(`/api/scoliosis/routines/${id}`, { method: 'PATCH', body: data });
   }
 
   async getPtAdherence(routineId?: string, startDate?: string, endDate?: string) {
     if (routineId) {
       return this.request(`/api/pt-adherence/${routineId}`);
     }
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
+    const query = this.buildDateQuery(startDate, endDate);
     return this.request(`/api/pt-adherence${query}`);
   }
 
@@ -275,46 +309,31 @@ class ApiService {
   }
 
   async getSymptomLogs(startDate?: string, endDate?: string) {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/scoliosis-symptoms${query}`);
+    const query = this.buildDateQuery(startDate, endDate);
+    return this.request(`/api/scoliosis/symptoms${query}`);
   }
 
   async logSymptoms(data: unknown) {
-    return this.request('/api/scoliosis-symptoms', { method: 'POST', body: data });
+    return this.request('/api/scoliosis/symptoms', { method: 'POST', body: data });
   }
 
   async getCheckins(startDate?: string, endDate?: string) {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/checkin${query}`);
+    const query = this.buildDateQuery(startDate, endDate);
+    return this.request(`/api/checkins${query}`);
   }
 
   async getSleepLogs(startDate?: string, endDate?: string) {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
+    const query = this.buildDateQuery(startDate, endDate);
     return this.request(`/api/sleep${query}`);
   }
 
   async getWorkoutLogs(startDate?: string, endDate?: string) {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
-    return this.request(`/api/workout${query}`);
+    const query = this.buildDateQuery(startDate, endDate);
+    return this.request(`/api/workouts${query}`);
   }
 
   async getNutritionLogs(startDate?: string, endDate?: string) {
-    const params = new URLSearchParams();
-    if (startDate) params.append('startDate', startDate);
-    if (endDate) params.append('endDate', endDate);
-    const query = params.toString() ? `?${params}` : '';
+    const query = this.buildDateQuery(startDate, endDate);
     return this.request(`/api/nutrition${query}`);
   }
 }
