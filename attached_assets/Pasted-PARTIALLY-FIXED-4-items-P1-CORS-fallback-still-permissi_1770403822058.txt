@@ -1,0 +1,99 @@
+PARTIALLY FIXED (4 items)
+P1. CORS fallback still permissive
+The CORS config reads ALLOWED_ORIGINS but falls back to origin: true (allow all) when not set. This is fine for development but will be wide-open in production unless the env var is explicitly configured.
+
+Action needed: Ensure ALLOWED_ORIGINS is set in Replit Secrets before production deploy. Consider failing closed (deny all) if not set.
+
+P2. Body validation inconsistent across routes
+Several routes now have proper Zod validation (checkin, sleep, workout, nutrition, mental-health), which is a significant improvement. However, these POST routes still spread req.body without validation:
+
+POST /api/pt-adherence (the legacy one at /api/pt-adherence, not the scoliosis one)
+POST /api/pt-routine
+POST /api/scoliosis/brace-logs (manual entry)
+
+
+Action needed: Add Zod schemas to remaining POST routes.
+
+P3. HealthKit still uses simulated data
+The file has been significantly improved — proper interfaces, compliance notes, workout type mapping, settings support — but every data method still returns Math.random() values. No native HealthKit module is installed (react-native-health not in dependencies). The file now has clear doc comments marking this as intentional for development.
+
+Action needed: This is acceptable for initial beta if clearly documented. For production, requires native module integration. The POST /api/health-sync backend endpoint is ready.
+
+P4. Safety checker scheduler still uses setTimeout/setInterval
+The scheduler was improved (configurable via env vars, per-teen scheduling, cleanup function), but still uses setTimeout/setInterval chains. Scheduled timeouts are tracked in a Map and cleaned up on stop, which mitigates the memory leak concern. However, all scheduled checks are still lost on server restart.
+
+Action needed: Acceptable for beta. For production, consider a job queue (Bull, Agenda) or cron-based approach.
+
+
+❌ STILL OPEN (6 items)
+O1. mobile/ subdirectory still exists in backend repo (LOW)
+The backend GitHub repo still contains a mobile/ directory with stale copies of the mobile app. While this doesn't affect functionality, it creates confusion about which codebase is canonical.
+
+Action needed: Delete the mobile/ directory from Node-Post-Connect repo.
+
+O2. 41 frontend dependencies in backend package.json (MEDIUM)
+Still 74 total dependencies, with 41 being React/Radix/Tailwind/Recharts packages that are never imported by any server code. express-session, passport, passport-local are also still listed but unused (JWT auth is used instead).
+
+Action needed: Remove all @radix-ui/*, react*, tailwindcss, recharts, framer-motion, lucide-react, class-variance-authority, express-session, passport, passport-local, memorystore, connect-pg-simple, ws from dependencies.
+
+O3. No database migrations tracked (MEDIUM)
+Still using drizzle-kit push for schema changes with no migration files. This is risky for production — no rollback capability, no audit trail of schema changes.
+
+Action needed: Switch to drizzle-kit generate + drizzle-kit migrate workflow before production.
+
+O4. No /api/health endpoint (LOW)
+No dedicated health check endpoint for uptime monitoring. The root / returns {status: "ok"} which partially serves this purpose.
+
+Action needed: Optional. The root endpoint may suffice, but a dedicated /api/health that also checks DB connectivity would be better for monitoring.
+
+O5. dailyTargetHours decimal/string handling (LOW)
+braceSchedules.dailyTargetHours is stored as decimal (Drizzle returns string). The buildMorningBrief now correctly uses parseFloat(), but other consumers may not. The brace schedule creation route stores it with String(dailyTargetHours) which is correct.
+
+Action needed: Audit all consumers of dailyTargetHours to ensure they parse the string.
+
+O6. ESM/CJS interop (LOW)
+package.json has "type": "module" but tsconfig.json targets CommonJS. The build script outputs .cjs. While this works in practice on Replit, it can cause issues with some tooling.
+
+Action needed: Align module system configuration.
+
+
+🆕 NEW ISSUES FOUND
+N1. ⚠️ Push Token Field Name Mismatch (HIGH)
+Frontend sends: { token, platform } in registerPushToken()
+Backend expects: const { pushToken } = req.body and rejects if !pushToken
+Every push token registration will fail with "Push token is required" because the backend reads req.body.pushToken but the frontend sends req.body.token.
+Fix (choose one):
+
+Frontend: change body: { token, platform } → body: { pushToken: token, platform }
+Backend: change const { pushToken } → const { token: pushToken } or const pushToken = req.body.token || req.body.pushToken
+
+N2. ⚠️ Missing Tab Screen Files: log and plan (MEDIUM)
+The main layout defines 6 tabs: home, scoliosis, log, insights, plan, settings. The log/ and plan/ directories exist with index files, but they weren't in the original frontend repo structure — they appear to have been added during remediation. These screens need verification that they render correctly and call the right API endpoints.
+Action needed: Verify log/index.tsx and plan/index.tsx compile and function correctly.
+N3. ⚠️ Duplicate PT Adherence Routes (MEDIUM)
+The backend registers TWO routes for PT adherence:
+
+POST /api/pt-adherence (line ~642) — no body validation, directly passes req.body
+POST /api/scoliosis/pt-adherence (line ~1084) — explicit field extraction from req.body
+
+The frontend calls POST /api/pt-adherence (the unvalidated one). Route #2 is more secure but unused by the frontend.
+Fix: Either redirect the frontend to use /api/scoliosis/pt-adherence, or merge the validation from route #2 into route #1.
+N4. ⚠️ Frontend markOnboardingComplete() Calls Wrong Endpoint (LOW-MEDIUM)
+markOnboardingComplete() sends PUT /api/profile with { onboardingComplete: true }. But onboardingComplete is a field on the users table, not the profiles table. The backend's PUT /api/profile handler calls storage.updateProfile() which writes to the profiles table — so this field update is silently ignored.
+The correct endpoint is POST /api/onboarding/complete which calls storage.updateUser().
+Fix: Change markOnboardingComplete() to call /api/onboarding/complete with POST method.
+N5. ⚠️ Data Export Email Flow Misleads Users (LOW)
+The frontend data-export.tsx shows "Email Me" as the primary action and displays "Email Sent" success dialog. But the backend endpoint is a stub that returns stub: true. Users will think they received an email that never arrives.
+Fix: Either remove the email option from the frontend until it's implemented, or show the stub: true / message from the response so users know to use direct download instead.
+
+Integration Route Map: Current Status
+Frontend MethodFrontend PathBackend PathMatch?register()POST /api/auth/registerPOST /api/auth/register✅login()POST /api/auth/loginPOST /api/auth/login✅getCurrentUser()GET /api/auth/meGET /api/auth/me✅verifySecurityWord()POST /api/auth/verify-security-wordPOST /api/auth/verify-security-word✅resetPassword()POST /api/auth/reset-passwordPOST /api/auth/reset-password✅getProfile()GET /api/profileGET /api/profile✅updateProfile()PUT /api/profilePUT /api/profile✅getUserProfile()GET /api/profileGET /api/profile✅updateUserProfile()PUT /api/profilePUT /api/profile✅updateGoals()PUT /api/goalsPUT /api/goals✅createCheckin()POST /api/checkinPOST /api/checkin✅getCheckins()GET /api/checkinsGET /api/checkins✅logSleep()POST /api/sleepPOST /api/sleep✅getSleepLogs()GET /api/sleepGET /api/sleep✅logWorkout()POST /api/workoutPOST /api/workout✅getWorkoutLogs()GET /api/workoutsGET /api/workouts✅logNutrition()POST /api/nutritionPOST /api/nutrition✅getNutritionLogs()GET /api/nutritionGET /api/nutrition✅logMentalHealth()POST /api/mental-healthPOST /api/mental-health✅getMentalHealthLogs()GET /api/mental-healthGET /api/mental-health✅getRecommendations()GET /api/recommendationsGET /api/recommendations✅getMorningBrief()GET /api/morning-briefGET /api/morning-brief✅completeAction()POST /api/recommendations/actions/completePOST /api/recommendations/actions/complete✅getScoliosisStatus()GET /api/scoliosis/statusGET /api/scoliosis/status✅enableScoliosisSupport()POST /api/scoliosis/enablePOST /api/scoliosis/enable✅getBraceSchedule()GET /api/scoliosis/brace-scheduleGET /api/scoliosis/brace-schedule✅createBraceSchedule()POST /api/scoliosis/brace-schedulePOST /api/scoliosis/brace-schedule✅updateBraceSchedule()PATCH /api/scoliosis/brace-schedule/:idPATCH /api/scoliosis/brace-schedule/:id✅getBraceLogs()GET /api/scoliosis/brace-logsGET /api/scoliosis/brace-logs✅getActiveBraceSession()GET /api/scoliosis/brace-logs/activeGET /api/scoliosis/brace-logs/active✅startBraceSession()POST /api/scoliosis/brace-logs/startPOST /api/scoliosis/brace-logs/start✅endBraceSession()POST /api/scoliosis/brace-logs/:id/endPOST /api/scoliosis/brace-logs/:id/end✅createBraceLog()POST /api/scoliosis/brace-logsPOST /api/scoliosis/brace-logs✅getPtExercises()GET /api/scoliosis/exercisesGET /api/scoliosis/exercises✅getPtRoutines()GET /api/scoliosis/routinesGET /api/scoliosis/routines✅createPtRoutine()POST /api/scoliosis/routines❌ Backend has POST /api/pt-routine⚠️updatePtRoutine()PATCH /api/scoliosis/routines/:id❌ No PATCH route for routines⚠️getPtAdherence()GET /api/pt-adherence?routine_id=GET /api/pt-adherence?routine_id=✅logPtAdherence()POST /api/pt-adherencePOST /api/pt-adherence✅getSymptomLogs()GET /api/scoliosis/symptomsGET /api/scoliosis/symptoms✅logSymptoms()POST /api/scoliosis/symptomsPOST /api/scoliosis/symptoms✅registerPushToken()POST /api/push-token {token}POST /api/push-token {pushToken}❌ N1markOnboardingComplete()PUT /api/profilePOST /api/onboarding/complete❌ N4Account deletionDELETE /api/accountDELETE /api/account✅Data exportGET /api/export-dataGET /api/export-data✅
+40/44 routes match perfectly. 4 issues remain (N1, N4, plus 2 PT routine path mismatches).
+
+Priority Remediation Plan
+Immediate (< 1 hour)
+TaskRepoEffortN1: Fix push token field name mismatchFrontend OR Backend5 minN4: Fix markOnboardingComplete() endpointFrontend5 minN5: Remove or label email export as unavailableFrontend15 minFix createPtRoutine() path mismatchFrontend or Backend10 minAdd updatePtRoutine backend route or remove frontend methodBackend15 min
+Short-term (1-3 hours)
+TaskRepoEffortP2: Add Zod validation to remaining unvalidated POST routesBackend1 hrN3: Consolidate duplicate PT adherence routesBackend30 minO1: Delete stale mobile/ directoryBackend5 minO2: Remove 41+ unused frontend deps from backend package.jsonBackend30 minSet ALLOWED_ORIGINS env var in productionBackend5 min
+Before production (3-5 hours)
+TaskRepoEffortO3: Set up migration workflow (drizzle-kit generate/migrate)Backend2 hrP3: Integrate real HealthKit native module or document as futureFrontendDecisionO5: Audit all dailyTargetHours consumers for parseFloatBackend30 minAdd health check endpoint with DB pingBackend15 min
