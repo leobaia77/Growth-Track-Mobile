@@ -1,15 +1,29 @@
-import { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Platform } from 'react-native';
+import { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Card, Button, Input, Slider, ConfirmDialog } from '@/components/ui';
 import { useLogSleep } from '@/hooks/useApi';
 import { useToast } from '@/components/ui/Toast';
+import { healthKit } from '@/services/healthKit';
 
 const QUALITY_LABELS = ['Very Poor', 'Poor', 'Fair', 'Good', 'Excellent'];
 const QUALITY_COLORS = ['#EF4444', '#F59E0B', '#64748B', '#10B981', '#059669'];
 const QUALITY_ICONS: (keyof typeof Ionicons.glyphMap)[] = [
   'thunderstorm-outline', 'cloudy-outline', 'partly-sunny-outline', 'sunny-outline', 'star-outline',
+];
+
+const DISTURBANCE_OPTIONS: { id: string; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { id: 'restless', label: 'Restless', icon: 'swap-horizontal-outline' },
+  { id: 'nightmare', label: 'Nightmares', icon: 'flash-outline' },
+  { id: 'noise', label: 'Noise', icon: 'volume-high-outline' },
+  { id: 'bathroom', label: 'Bathroom', icon: 'water-outline' },
+  { id: 'pain', label: 'Pain/Discomfort', icon: 'bandage-outline' },
+  { id: 'temperature', label: 'Too Hot/Cold', icon: 'thermometer-outline' },
+  { id: 'stress', label: 'Stress/Anxiety', icon: 'pulse-outline' },
+  { id: 'screen', label: 'Late Screen Time', icon: 'phone-portrait-outline' },
+  { id: 'caffeine', label: 'Caffeine', icon: 'cafe-outline' },
+  { id: 'snoring', label: 'Snoring', icon: 'mic-outline' },
 ];
 
 function formatHour(hour: number): string {
@@ -34,19 +48,37 @@ export default function SleepLogScreen() {
   const [quality, setQuality] = useState(3);
   const [notes, setNotes] = useState('');
   const [wakeUps, setWakeUps] = useState(0);
+  const [disturbances, setDisturbances] = useState<string[]>([]);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [healthKitLoading, setHealthKitLoading] = useState(false);
+  const [healthKitAvailable, setHealthKitAvailable] = useState(false);
 
-  const hasModified = bedtime !== 22 || wakeTime !== 7 || quality !== 3 || notes !== '' || wakeUps !== 0;
+  useEffect(() => {
+    healthKit.isHealthKitAvailable().then(setHealthKitAvailable);
+  }, []);
+
+  const hasModified = bedtime !== 22 || wakeTime !== 7 || quality !== 3 || notes !== '' || wakeUps !== 0 || disturbances.length > 0;
 
   const totalHours = calculateSleepHours(bedtime, wakeTime);
   const qualityIndex = quality - 1;
 
   const handleSave = () => {
+    const disturbanceLabels = disturbances.map(id =>
+      DISTURBANCE_OPTIONS.find(d => d.id === id)?.label
+    ).filter(Boolean);
+    const sleepNotes = [
+      disturbanceLabels.length > 0 ? `Disturbances: ${disturbanceLabels.join(', ')}` : '',
+      wakeUps > 0 ? `Woke up ${wakeUps} time${wakeUps > 1 ? 's' : ''}` : '',
+      `Quality: ${QUALITY_LABELS[qualityIndex]}`,
+      notes,
+    ].filter(Boolean).join('. ');
+
     logSleep.mutate(
       {
         date: new Date().toISOString().split('T')[0],
         totalHours: totalHours.toString(),
         source: 'manual',
+        notes: sleepNotes || undefined,
       },
       {
         onSuccess: () => {
@@ -65,6 +97,49 @@ export default function SleepLogScreen() {
     if (totalHours < 7) return '#F59E0B';
     if (totalHours <= 9) return '#10B981';
     return '#F59E0B';
+  };
+
+  const handleImportHealthKit = async () => {
+    if (Platform.OS === 'web') {
+      showToast('info', 'iOS Only', 'Open this app in Expo Go on your iPhone to import from Apple Health');
+      return;
+    }
+    if (!healthKitAvailable) {
+      showToast('info', 'Not Available', 'Apple Health is not available on this device');
+      return;
+    }
+    setHealthKitLoading(true);
+    try {
+      const authorized = await healthKit.requestPermissions();
+      if (!authorized) {
+        showToast('error', 'Permission Denied', 'Please allow access to Apple Health in Settings');
+        setHealthKitLoading(false);
+        return;
+      }
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const today = new Date();
+      const sleepData = await healthKit.getSleepData(yesterday, today);
+      if (sleepData.length > 0) {
+        const latest = sleepData[sleepData.length - 1];
+        const bedHour = parseInt(latest.bedtime.split(':')[0], 10);
+        const wakeHour = parseInt(latest.wakeTime.split(':')[0], 10);
+        if (bedHour >= 18 && bedHour <= 28) setBedtime(bedHour);
+        if (wakeHour >= 4 && wakeHour <= 14) setWakeTime(wakeHour);
+        showToast('success', 'Imported', `Sleep data from Apple Health: ${latest.totalHours}h`);
+      } else {
+        showToast('info', 'No Data', 'No sleep data found for last night in Apple Health');
+      }
+    } catch {
+      showToast('error', 'Import Failed', 'Could not import from Apple Health');
+    }
+    setHealthKitLoading(false);
+  };
+
+  const toggleDisturbance = (id: string) => {
+    setDisturbances(prev =>
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
   };
 
   const getHoursMessage = () => {
@@ -98,6 +173,23 @@ export default function SleepLogScreen() {
           <Text style={[styles.hoursText, { color: getHoursColor() }]}>{totalHours}h</Text>
           <Text style={styles.hoursMessage}>{getHoursMessage()}</Text>
         </Card>
+
+        <TouchableOpacity
+          style={styles.healthKitBtn}
+          onPress={handleImportHealthKit}
+          disabled={healthKitLoading}
+          testID="button-import-healthkit"
+        >
+          {healthKitLoading ? (
+            <ActivityIndicator size="small" color="#EF4444" />
+          ) : (
+            <Ionicons name="heart-circle-outline" size={20} color="#EF4444" />
+          )}
+          <Text style={styles.healthKitBtnText}>
+            {healthKitLoading ? 'Importing...' : 'Import from Apple Health'}
+          </Text>
+          <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+        </TouchableOpacity>
 
         <View style={styles.timeSection}>
           <Text style={styles.sectionTitle}>Bedtime</Text>
@@ -197,9 +289,38 @@ export default function SleepLogScreen() {
           </View>
         </View>
 
+        <View style={styles.disturbanceSection}>
+          <Text style={styles.sectionTitle}>Sleep Disturbances</Text>
+          <Text style={styles.disturbanceSubtitle}>
+            {disturbances.length > 0 ? `${disturbances.length} selected` : 'Tap any that apply'}
+          </Text>
+          <View style={styles.disturbanceGrid}>
+            {DISTURBANCE_OPTIONS.map((item) => {
+              const selected = disturbances.includes(item.id);
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.disturbanceChip, selected ? styles.disturbanceChipActive : undefined]}
+                  onPress={() => toggleDisturbance(item.id)}
+                  testID={`button-disturbance-${item.id}`}
+                >
+                  <Ionicons
+                    name={item.icon}
+                    size={16}
+                    color={selected ? '#6366F1' : '#94A3B8'}
+                  />
+                  <Text style={[styles.disturbanceChipText, selected ? styles.disturbanceChipTextActive : undefined]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+
         <Input
           label="Notes (optional)"
-          placeholder="Dreams, disruptions, how you felt waking up..."
+          placeholder="Dreams, how you felt waking up, anything else..."
           value={notes}
           onChangeText={setNotes}
           multiline
@@ -279,6 +400,24 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#64748B',
     marginTop: 4,
+  },
+  healthKitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FEF2F2',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    marginBottom: 24,
+  },
+  healthKitBtnText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#B91C1C',
   },
   timeSection: {
     marginBottom: 24,
@@ -372,6 +511,43 @@ const styles = StyleSheet.create({
   },
   wakeBtnTextActive: {
     color: '#fff',
+  },
+  disturbanceSection: {
+    marginBottom: 24,
+  },
+  disturbanceSubtitle: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: -8,
+    marginBottom: 12,
+  },
+  disturbanceGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  disturbanceChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#fff',
+  },
+  disturbanceChipActive: {
+    backgroundColor: '#EEF2FF',
+    borderColor: '#6366F1',
+  },
+  disturbanceChipText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#94A3B8',
+  },
+  disturbanceChipTextActive: {
+    color: '#6366F1',
   },
   tipCard: {
     flexDirection: 'row',
