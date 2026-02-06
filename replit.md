@@ -10,6 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+- **Backend API alignment audit (Feb 2026)** - Comprehensive frontend-backend alignment:
+  - Fixed 13 API integration issues: field names, paths, query params, auth response handling
+  - Field fixes: painFlag→hasPainFlag, protein→proteinG, carbs→carbsG, fat→fatG, description→notes
+  - Query params: All date filters now use snake_case (start_date, end_date) per backend convention
+  - Path fixes: GET /api/checkins (plural), GET /api/workouts (plural), /api/scoliosis/brace-* prefix, /api/scoliosis/symptoms, /api/export-data
+  - Auth: Normalized split user/profile/userProfile response from backend into flat user object
+  - Account delete: Now sends { confirmEmail } in request body
+  - Registration: securityWord now included in register request body
+  - Types updated: DailyCheckin.hasPainFlag, NutritionLog.proteinG/carbsG/fatG/notes
+  - Updated BACKEND_AUDIT_PROMPT.md with 7 confirmed backend gaps still needing implementation
 - **Final bug & security audit (Feb 2026)** - Comprehensive audit with fixes:
   - Fixed 7 stale navigation routes: All logging screen home buttons now go to /(main)/home instead of deprecated /(tabs)
   - Fixed admin dashboard back button routing from /(tabs)/profile to /(main)/home
