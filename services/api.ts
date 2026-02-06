@@ -285,7 +285,7 @@ class ApiService {
   }
 
   async getPtRoutines() {
-    return this.request('/api/pt-routines');
+    return this.request('/api/scoliosis/routines');
   }
 
   async createPtRoutine(data: unknown) {
@@ -297,10 +297,11 @@ class ApiService {
   }
 
   async getPtAdherence(routineId?: string, startDate?: string, endDate?: string) {
-    if (routineId) {
-      return this.request(`/api/pt-adherence/${routineId}`);
-    }
-    const query = this.buildDateQuery(startDate, endDate);
+    const params = new URLSearchParams();
+    if (routineId) params.append('routine_id', routineId);
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    const query = params.toString() ? `?${params}` : '';
     return this.request(`/api/pt-adherence${query}`);
   }
 
