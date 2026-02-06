@@ -85,9 +85,13 @@ class ApiService {
   }
 
   async register(email: string, password: string, displayName: string, securityWord?: string): Promise<AuthResponse> {
+    const body: Record<string, string> = { email, password, displayName, role: 'user' };
+    if (securityWord) {
+      body.securityWord = securityWord;
+    }
     const response = await this.request<AuthResponse>('/api/auth/register', {
       method: 'POST',
-      body: { email, password, displayName, role: 'user' },
+      body,
       requiresAuth: false,
     });
     
