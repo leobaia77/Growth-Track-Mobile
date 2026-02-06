@@ -57,7 +57,7 @@ export default function AccountScreen() {
   const confirmDeleteAccount = async () => {
     setShowDeleteConfirmDialog(false);
     try {
-      await api.request('/api/account', { method: 'DELETE' });
+      await api.request('/api/account', { method: 'DELETE', body: { confirmEmail: email } });
       setShowDeleteSuccessDialog(true);
     } catch (error) {
       setShowDeleteErrorDialog(true);

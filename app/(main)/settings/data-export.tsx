@@ -21,7 +21,7 @@ export default function DataExportScreen() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await api.request(`/api/data-export?format=${selectedFormat}`);
+      const response = await api.request(`/api/export-data?format=${selectedFormat}`);
       setExportResponse(response);
       setShowExportReadyDialog(true);
     } catch (error) {
