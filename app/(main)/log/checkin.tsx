@@ -73,7 +73,7 @@ export default function CheckinScreen() {
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Daily Check-in</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.homeButton} testID="button-home-checkin">
+        <TouchableOpacity onPress={() => router.replace('/(main)/home')} style={styles.homeButton} testID="button-home-checkin">
           <Ionicons name="home-outline" size={24} color="#64748B" />
         </TouchableOpacity>
       </View>

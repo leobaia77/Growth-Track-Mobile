@@ -165,7 +165,7 @@ export default function MealLogScreen() {
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Log Meal</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.homeButton} testID="button-home-meal">
+        <TouchableOpacity onPress={() => router.replace('/(main)/home')} style={styles.homeButton} testID="button-home-meal">
           <Ionicons name="home-outline" size={24} color="#64748B" />
         </TouchableOpacity>
       </View>

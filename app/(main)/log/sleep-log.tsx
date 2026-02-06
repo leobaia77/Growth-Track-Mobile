@@ -162,7 +162,7 @@ export default function SleepLogScreen() {
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.title}>Log Sleep</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.homeButton} testID="button-home-sleep">
+        <TouchableOpacity onPress={() => router.replace('/(main)/home')} style={styles.homeButton} testID="button-home-sleep">
           <Ionicons name="home-outline" size={24} color="#64748B" />
         </TouchableOpacity>
       </View>

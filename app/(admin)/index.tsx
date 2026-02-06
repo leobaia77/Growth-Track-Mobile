@@ -108,7 +108,7 @@ export default function AdminDashboard() {
     if (navigation.canGoBack()) {
       router.back();
     } else {
-      router.replace('/(tabs)/profile');
+      router.replace('/(main)/home');
     }
   };
   const [refreshing, setRefreshing] = useState(false);

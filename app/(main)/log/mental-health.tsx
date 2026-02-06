@@ -647,7 +647,7 @@ export default function MentalHealthLogScreen() {
           <Ionicons name="arrow-back" size={24} color="#64748B" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Mental Health</Text>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.homeButton} testID="button-home-mental-health">
+        <TouchableOpacity onPress={() => router.replace('/(main)/home')} style={styles.homeButton} testID="button-home-mental-health">
           <Ionicons name="home-outline" size={22} color="#64748B" />
         </TouchableOpacity>
       </View>

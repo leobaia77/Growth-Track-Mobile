@@ -753,7 +753,7 @@ export default function WorkoutLogScreen() {
       setStep('template-select');
     } else {
       if (elapsedRef.current) clearInterval(elapsedRef.current);
-      router.replace('/(tabs)');
+      router.replace('/(main)/home');
     }
   };
 
@@ -785,7 +785,7 @@ export default function WorkoutLogScreen() {
               setDiscardAction('home');
               setShowDiscardDialog(true);
             } else {
-              router.replace('/(tabs)');
+              router.replace('/(main)/home');
             }
           }} style={styles.homeButton} testID="button-home-workout">
             <Ionicons name="home-outline" size={22} color="#64748B" />
