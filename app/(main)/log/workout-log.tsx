@@ -558,13 +558,54 @@ export default function WorkoutLogScreen() {
   const [customCategories, setCustomCategories] = useState<WorkoutCategory[]>([]);
   const [showAddType, setShowAddType] = useState(false);
   const [newTypeName, setNewTypeName] = useState('');
-  const [duration, setDuration] = useState(60);
   const [rpe, setRpe] = useState(5);
   const [notes, setNotes] = useState('');
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [showTimer, setShowTimer] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [workoutPaused, setWorkoutPaused] = useState(false);
+  const elapsedRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const allCategories = [...WORKOUT_CATEGORIES, ...customCategories];
+
+  const startElapsedTimer = useCallback(() => {
+    if (elapsedRef.current) clearInterval(elapsedRef.current);
+    setElapsedSeconds(0);
+    setWorkoutPaused(false);
+    elapsedRef.current = setInterval(() => {
+      setElapsedSeconds((s) => s + 1);
+    }, 1000);
+  }, []);
+
+  const toggleElapsedPause = useCallback(() => {
+    if (workoutPaused) {
+      elapsedRef.current = setInterval(() => {
+        setElapsedSeconds((s) => s + 1);
+      }, 1000);
+      setWorkoutPaused(false);
+    } else {
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
+      setWorkoutPaused(true);
+    }
+  }, [workoutPaused]);
+
+  useEffect(() => {
+    return () => {
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
+    };
+  }, []);
+
+  const formatElapsed = (totalSecs: number) => {
+    const hrs = Math.floor(totalSecs / 3600);
+    const mins = Math.floor((totalSecs % 3600) / 60);
+    const secs = totalSecs % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const elapsedMinutes = Math.max(1, Math.round(elapsedSeconds / 60));
 
   const handleSelectCategory = (cat: WorkoutCategory) => {
     setSelectedCategory(cat);
@@ -573,7 +614,6 @@ export default function WorkoutLogScreen() {
 
   const handleSelectTemplate = (template: WorkoutTemplate) => {
     setSelectedTemplate(template);
-    setDuration(template.duration);
     setNotes(template.description);
     const newExercises: Exercise[] = template.exercises.map((e, i) => ({
       id: `${Date.now()}-${i}`,
@@ -589,6 +629,7 @@ export default function WorkoutLogScreen() {
     }));
     setExercises(newExercises);
     setStep('workout-active');
+    startElapsedTimer();
   };
 
   const handleStartCustom = () => {
@@ -596,6 +637,7 @@ export default function WorkoutLogScreen() {
     setExercises([]);
     setNotes('');
     setStep('workout-active');
+    startElapsedTimer();
   };
 
   const handleAddCustomType = () => {
@@ -631,11 +673,13 @@ export default function WorkoutLogScreen() {
 
     const fullNotes = [notes, exerciseSummary].filter(Boolean).join('\n---\n');
 
+    if (elapsedRef.current) clearInterval(elapsedRef.current);
+
     logWorkout.mutate(
       {
         date: new Date().toISOString().split('T')[0],
         workoutType: selectedCategory?.id || 'other',
-        durationMinutes: duration,
+        durationMinutes: elapsedMinutes,
         rpe,
         notes: fullNotes || null,
         source: 'manual',
@@ -683,6 +727,7 @@ export default function WorkoutLogScreen() {
 
   const handleBack = () => {
     if (step === 'workout-active') {
+      if (elapsedRef.current) clearInterval(elapsedRef.current);
       setStep('template-select');
     } else if (step === 'template-select') {
       setStep('type-select');
@@ -839,10 +884,25 @@ export default function WorkoutLogScreen() {
 
       {step === 'workout-active' ? (
         <>
+          <View style={styles.elapsedBar}>
+            <View style={styles.elapsedLeft}>
+              <Ionicons name="time-outline" size={18} color="#10B981" />
+              <Text style={styles.elapsedTime} testID="text-elapsed-time">{formatElapsed(elapsedSeconds)}</Text>
+            </View>
+            {exercises.length > 0 ? (
+              <Text style={styles.elapsedProgress}>{completedCount}/{exercises.length} done</Text>
+            ) : null}
+            <TouchableOpacity
+              onPress={toggleElapsedPause}
+              style={styles.elapsedPauseBtn}
+              testID="button-pause-elapsed"
+            >
+              <Ionicons name={workoutPaused ? 'play' : 'pause'} size={16} color="#10B981" />
+            </TouchableOpacity>
+          </View>
           {exercises.length > 0 ? (
             <View style={styles.progressBar}>
               <View style={[styles.progressFill, { width: `${(completedCount / exercises.length) * 100}%` }]} />
-              <Text style={styles.progressText}>{completedCount}/{exercises.length} completed</Text>
             </View>
           ) : null}
 
@@ -871,18 +931,14 @@ export default function WorkoutLogScreen() {
 
             <View style={styles.workoutDetails}>
               <View style={styles.durationSection}>
-                <Text style={styles.durationLabel}>Duration: {duration} min</Text>
-                <Slider
-                  value={duration}
-                  onValueChange={setDuration}
-                  min={5}
-                  max={180}
-                  step={5}
-                  leftLabel="5m"
-                  rightLabel="3h"
-                  showValue={false}
-                  testID="slider-duration"
-                />
+                <View style={styles.durationRow}>
+                  <Ionicons name="timer-outline" size={20} color="#10B981" />
+                  <Text style={styles.durationLabel}>Workout Duration</Text>
+                </View>
+                <View style={styles.durationDisplay}>
+                  <Text style={styles.durationTime} testID="text-duration-display">{formatElapsed(elapsedSeconds)}</Text>
+                  <Text style={styles.durationMinutes}>({elapsedMinutes} min)</Text>
+                </View>
               </View>
 
               <View style={styles.rpeSection}>
@@ -1119,16 +1175,27 @@ const styles = StyleSheet.create({
   },
   customWorkoutText: { fontSize: 14, color: '#10B981', fontWeight: '600' },
 
+  elapsedBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: '#F0FDF4', borderBottomWidth: 1, borderBottomColor: '#BBF7D0',
+  },
+  elapsedLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  elapsedTime: {
+    fontSize: 22, fontWeight: '700', color: '#10B981',
+    fontVariant: ['tabular-nums'],
+  },
+  elapsedProgress: { fontSize: 13, fontWeight: '600', color: '#64748B' },
+  elapsedPauseBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    backgroundColor: '#D1FAE5', justifyContent: 'center', alignItems: 'center',
+  },
   progressBar: {
-    height: 28, backgroundColor: '#F1F5F9', justifyContent: 'center',
-    borderBottomWidth: 1, borderBottomColor: '#E2E8F0',
+    height: 4, backgroundColor: '#E2E8F0',
   },
   progressFill: {
     position: 'absolute', left: 0, top: 0, bottom: 0,
-    backgroundColor: '#D1FAE5',
-  },
-  progressText: {
-    textAlign: 'center', fontSize: 12, fontWeight: '600', color: '#10B981', zIndex: 1,
+    backgroundColor: '#10B981',
   },
 
   activeHeader: { marginBottom: 16 },
@@ -1146,7 +1213,11 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#E8F5F0', marginBottom: 30,
   },
   durationSection: { marginBottom: 20 },
-  durationLabel: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 12 },
+  durationRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 },
+  durationLabel: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  durationDisplay: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingLeft: 28 },
+  durationTime: { fontSize: 28, fontWeight: '700', color: '#10B981', fontVariant: ['tabular-nums'] },
+  durationMinutes: { fontSize: 14, color: '#64748B' },
   rpeSection: { marginBottom: 16 },
   rpeHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   rpeLabel: { fontSize: 15, fontWeight: '600', color: '#374151' },
