@@ -12,6 +12,10 @@ app.get('/status', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/privacy-policy', (req, res) => {
+  res.sendFile(path.join(__dirname, 'privacy-policy.html'));
+});
+
 app.use((req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
