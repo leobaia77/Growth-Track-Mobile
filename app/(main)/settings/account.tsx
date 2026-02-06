@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Card, Button, Input } from '@/components/ui';
+import { Card, Button, Input, ConfirmDialog } from '@/components/ui';
 import { storage } from '@/services/storage';
 import { api } from '@/services/api';
 import type { User } from '@/types';
@@ -12,6 +12,11 @@ export default function AccountScreen() {
   const [user, setUser] = useState<User | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
+  const [showDeleteSuccessDialog, setShowDeleteSuccessDialog] = useState(false);
+  const [showDeleteErrorDialog, setShowDeleteErrorDialog] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -30,75 +35,43 @@ export default function AccountScreen() {
     router.back();
   };
 
-  const handleSignOut = async () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Sign Out', 
-          style: 'destructive',
-          onPress: async () => {
-            await api.logout();
-            router.replace('/(auth)/login');
-          },
-        },
-      ]
-    );
+  const handleSignOut = () => {
+    setShowSignOutDialog(true);
+  };
+
+  const confirmSignOut = async () => {
+    setShowSignOutDialog(false);
+    await api.logout();
+    router.replace('/(auth)/login');
   };
 
   const handleDeleteAccount = () => {
-    Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This will permanently remove all your data.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Continue', 
-          style: 'destructive',
-          onPress: () => confirmDeleteAccount(),
-        },
-      ]
-    );
+    setShowDeleteDialog(true);
   };
 
-  const confirmDeleteAccount = () => {
-    Alert.alert(
-      'Final Confirmation',
-      'This action CANNOT be undone. All your health data, logs, and account information will be permanently deleted within 30 days. Type "DELETE" to confirm.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete Forever', 
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete('/api/account');
-              Alert.alert(
-                'Account Deleted',
-                'Your account deletion has been scheduled. You will receive a confirmation email. Your data will be permanently removed within 30 days.',
-                [
-                  { 
-                    text: 'OK', 
-                    onPress: async () => {
-                      await api.logout();
-                      router.replace('/(auth)/login');
-                    }
-                  }
-                ]
-              );
-            } catch (error) {
-              Alert.alert(
-                'Error',
-                'We couldn\'t process your request right now. Please try again or contact support.',
-                [{ text: 'OK' }]
-              );
-            }
-          },
-        },
-      ]
-    );
+  const proceedToFinalDelete = () => {
+    setShowDeleteDialog(false);
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const confirmDeleteAccount = async () => {
+    setShowDeleteConfirmDialog(false);
+    try {
+      await api.delete('/api/account');
+      setShowDeleteSuccessDialog(true);
+    } catch (error) {
+      setShowDeleteErrorDialog(true);
+    }
+  };
+
+  const handleDeleteSuccess = async () => {
+    setShowDeleteSuccessDialog(false);
+    await api.logout();
+    router.replace('/(auth)/login');
+  };
+
+  const handleChangePassword = () => {
+    router.push('/(auth)/forgot-password');
   };
 
   return (
@@ -118,9 +91,6 @@ export default function AccountScreen() {
               {displayName?.charAt(0).toUpperCase() || 'U'}
             </Text>
           </View>
-          <TouchableOpacity style={styles.changePhotoButton}>
-            <Text style={styles.changePhotoText}>Change Photo</Text>
-          </TouchableOpacity>
         </View>
 
         <Input
@@ -139,7 +109,7 @@ export default function AccountScreen() {
           testID="input-email"
         />
 
-        <TouchableOpacity style={styles.passwordLink}>
+        <TouchableOpacity style={styles.passwordLink} onPress={handleChangePassword} testID="button-change-password">
           <Text style={styles.passwordLinkText}>Change Password</Text>
           <Ionicons name="chevron-forward" size={20} color="#10B981" />
         </TouchableOpacity>
@@ -174,6 +144,61 @@ export default function AccountScreen() {
           testID="button-save-account"
         />
       </View>
+
+      <ConfirmDialog
+        visible={showSignOutDialog}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmText="Sign Out"
+        cancelText="Cancel"
+        onConfirm={confirmSignOut}
+        onCancel={() => setShowSignOutDialog(false)}
+        destructive
+      />
+
+      <ConfirmDialog
+        visible={showDeleteDialog}
+        title="Delete Account"
+        message="Are you sure you want to delete your account? This will permanently remove all your data."
+        confirmText="Continue"
+        cancelText="Cancel"
+        onConfirm={proceedToFinalDelete}
+        onCancel={() => setShowDeleteDialog(false)}
+        destructive
+      />
+
+      <ConfirmDialog
+        visible={showDeleteConfirmDialog}
+        title="Final Confirmation"
+        message="This action CANNOT be undone. All your health data, logs, and account information will be permanently deleted within 30 days."
+        confirmText="Delete Forever"
+        cancelText="Cancel"
+        onConfirm={confirmDeleteAccount}
+        onCancel={() => setShowDeleteConfirmDialog(false)}
+        destructive
+      />
+
+      <ConfirmDialog
+        visible={showDeleteSuccessDialog}
+        title="Account Deleted"
+        message="Your account deletion has been scheduled. You will receive a confirmation email. Your data will be permanently removed within 30 days."
+        confirmText="OK"
+        cancelText="Close"
+        onConfirm={handleDeleteSuccess}
+        onCancel={handleDeleteSuccess}
+        destructive={false}
+      />
+
+      <ConfirmDialog
+        visible={showDeleteErrorDialog}
+        title="Error"
+        message="We couldn't process your request right now. Please try again or contact support."
+        confirmText="OK"
+        cancelText="Close"
+        onConfirm={() => setShowDeleteErrorDialog(false)}
+        onCancel={() => setShowDeleteErrorDialog(false)}
+        destructive={false}
+      />
     </SafeAreaView>
   );
 }
@@ -223,15 +248,6 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: '700',
     color: '#FFFFFF',
-  },
-  changePhotoButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  changePhotoText: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '500',
   },
   passwordLink: {
     flexDirection: 'row',

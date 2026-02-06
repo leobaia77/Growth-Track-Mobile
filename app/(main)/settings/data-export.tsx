@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import { Card } from '@/components/ui';
+import { Card, ConfirmDialog } from '@/components/ui';
 import { apiService } from '@/services/api';
 
 type ExportFormat = 'json' | 'csv';
@@ -11,60 +11,41 @@ export default function DataExportScreen() {
   const router = useRouter();
   const [isExporting, setIsExporting] = useState(false);
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('json');
+  const [showExportReadyDialog, setShowExportReadyDialog] = useState(false);
+  const [showEmailSentDialog, setShowEmailSentDialog] = useState(false);
+  const [showDownloadReadyDialog, setShowDownloadReadyDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [exportResponse, setExportResponse] = useState<unknown>(null);
 
   const handleExport = async () => {
     setIsExporting(true);
     try {
       const response = await apiService.get(`/api/data-export?format=${selectedFormat}`);
-      
-      Alert.alert(
-        'Export Ready',
-        'Your data has been prepared. Would you like to receive it via email or download it now?',
-        [
-          {
-            text: 'Email Me',
-            onPress: () => handleEmailExport(),
-          },
-          {
-            text: 'Download',
-            onPress: () => handleDownload(response),
-          },
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-        ]
-      );
+      setExportResponse(response);
+      setShowExportReadyDialog(true);
     } catch (error) {
-      Alert.alert(
-        'Export Failed',
-        'We couldn\'t export your data right now. Please try again later or contact support.',
-        [{ text: 'OK' }]
-      );
+      setErrorMessage("We couldn't export your data right now. Please try again later or contact support.");
+      setShowErrorDialog(true);
     } finally {
       setIsExporting(false);
     }
   };
 
   const handleEmailExport = async () => {
+    setShowExportReadyDialog(false);
     try {
       await apiService.post('/api/data-export/email', { format: selectedFormat });
-      Alert.alert(
-        'Email Sent',
-        'Your data export has been sent to your registered email address.',
-        [{ text: 'OK' }]
-      );
+      setShowEmailSentDialog(true);
     } catch (error) {
-      Alert.alert('Error', 'Failed to send email. Please try again.');
+      setErrorMessage('Failed to send email. Please try again.');
+      setShowErrorDialog(true);
     }
   };
 
-  const handleDownload = (data: unknown) => {
-    Alert.alert(
-      'Download Ready',
-      'In a production build, this would save the file to your device. Your data export is ready.',
-      [{ text: 'OK' }]
-    );
+  const handleDownload = () => {
+    setShowExportReadyDialog(false);
+    setShowDownloadReadyDialog(true);
   };
 
   return (
@@ -129,14 +110,14 @@ export default function DataExportScreen() {
           <Text style={styles.sectionTitle}>Export Format</Text>
           <View style={styles.formatOptions}>
             <TouchableOpacity
-              style={[styles.formatOption, selectedFormat === 'json' && styles.formatOptionSelected]}
+              style={[styles.formatOption, selectedFormat === 'json' ? styles.formatOptionSelected : undefined]}
               onPress={() => setSelectedFormat('json')}
               accessibilityLabel="JSON format"
               accessibilityRole="radio"
               accessibilityState={{ checked: selectedFormat === 'json' }}
             >
-              <View style={[styles.radio, selectedFormat === 'json' && styles.radioSelected]}>
-                {selectedFormat === 'json' && <View style={styles.radioInner} />}
+              <View style={[styles.radio, selectedFormat === 'json' ? styles.radioSelected : undefined]}>
+                {selectedFormat === 'json' ? <View style={styles.radioInner} /> : null}
               </View>
               <View style={styles.formatInfo}>
                 <Text style={styles.formatTitle}>JSON</Text>
@@ -145,14 +126,14 @@ export default function DataExportScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.formatOption, selectedFormat === 'csv' && styles.formatOptionSelected]}
+              style={[styles.formatOption, selectedFormat === 'csv' ? styles.formatOptionSelected : undefined]}
               onPress={() => setSelectedFormat('csv')}
               accessibilityLabel="CSV format"
               accessibilityRole="radio"
               accessibilityState={{ checked: selectedFormat === 'csv' }}
             >
-              <View style={[styles.radio, selectedFormat === 'csv' && styles.radioSelected]}>
-                {selectedFormat === 'csv' && <View style={styles.radioInner} />}
+              <View style={[styles.radio, selectedFormat === 'csv' ? styles.radioSelected : undefined]}>
+                {selectedFormat === 'csv' ? <View style={styles.radioInner} /> : null}
               </View>
               <View style={styles.formatInfo}>
                 <Text style={styles.formatTitle}>CSV</Text>
@@ -163,7 +144,7 @@ export default function DataExportScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.exportButton, isExporting && styles.exportButtonDisabled]}
+          style={[styles.exportButton, isExporting ? styles.exportButtonDisabled : undefined]}
           onPress={handleExport}
           disabled={isExporting}
           accessibilityLabel="Export data"
@@ -183,8 +164,52 @@ export default function DataExportScreen() {
           Your export will be generated securely. This may take a few moments depending on how much data you have.
         </Text>
 
-        <View style={styles.footer} />
+        <View style={styles.footerSpace} />
       </ScrollView>
+
+      <ConfirmDialog
+        visible={showExportReadyDialog}
+        title="Export Ready"
+        message="Your data has been prepared. Would you like to receive it via email?"
+        confirmText="Email Me"
+        cancelText="Cancel"
+        onConfirm={handleEmailExport}
+        onCancel={() => setShowExportReadyDialog(false)}
+        destructive={false}
+      />
+
+      <ConfirmDialog
+        visible={showEmailSentDialog}
+        title="Email Sent"
+        message="Your data export has been sent to your registered email address."
+        confirmText="OK"
+        cancelText="Close"
+        onConfirm={() => setShowEmailSentDialog(false)}
+        onCancel={() => setShowEmailSentDialog(false)}
+        destructive={false}
+      />
+
+      <ConfirmDialog
+        visible={showDownloadReadyDialog}
+        title="Download Ready"
+        message="In a production build, this would save the file to your device. Your data export is ready."
+        confirmText="OK"
+        cancelText="Close"
+        onConfirm={() => setShowDownloadReadyDialog(false)}
+        onCancel={() => setShowDownloadReadyDialog(false)}
+        destructive={false}
+      />
+
+      <ConfirmDialog
+        visible={showErrorDialog}
+        title="Export Failed"
+        message={errorMessage}
+        confirmText="OK"
+        cancelText="Close"
+        onConfirm={() => setShowErrorDialog(false)}
+        onCancel={() => setShowErrorDialog(false)}
+        destructive={false}
+      />
     </SafeAreaView>
   );
 }
@@ -335,7 +360,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     lineHeight: 20,
   },
-  footer: {
+  footerSpace: {
     height: 40,
   },
 });
